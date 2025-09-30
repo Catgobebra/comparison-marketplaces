@@ -1,8 +1,16 @@
+import * as React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Main from "./Main";
+import ProductTable from "./ProductTable";
 
 function App() {
   return (
-   <Main/>
+   <Router>
+      <Routes>
+        <Route path="/" element={<Main />} />
+        <Route path="/comparison" element={<ProductTable/>} />
+      </Routes> 
+    </Router>
   );
 }
 

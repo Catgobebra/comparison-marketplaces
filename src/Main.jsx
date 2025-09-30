@@ -20,9 +20,11 @@ import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Main(){
+
+    const navigate = useNavigate();
 
     const [products,setProducts] = useState([])
     const [currentLink, setCurrentLink] = useState('');
@@ -31,10 +33,7 @@ function Main(){
     const isCurrentSkuOzon = /\/product\/[^\/]+\-(\d{9,})(?:\/|\?|$)/i
 
     const [currentUrl, setCurrentUrl] = useState('');
-
     const [isProduct, setIsProduct] = useState(false);
-
-    const [open, setOpen] = React.useState(false);
 
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -42,23 +41,46 @@ function Main(){
         message: ""
     });
 
-
     const handleClose = (event, reason) => {
-    if (reason === 'clickaway') {
-        return;
+        if (reason === 'clickaway') {
+            return;
         }
         setSnackbar(prev => ({...prev, open: false}));
     };
 
+    const getProductsInfo = async () => {
+        try {
+            const promises = products.map(sku => 
+                fetch(`http://localhost:5018/api/Products/by-sku/${sku}`, {
+                    method: 'GET',
+                    headers: {
+                        'accept': 'text/plain'
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+            );
 
-    /* useEffect(() => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.url) {
-            setCurrentUrl(tabs[0].url)
-            setIsProduct(isOzonProduct.test(tabs[0].url))
+            const results = await Promise.all(promises);
+            
+            console.log('Products info:', results);
+            
+            navigate('/comparison', {
+                state: { productsInfo: results }
+            });
+            
+        } catch (error) {
+            console.error('Ошибка при получении данных:', error);
+            setSnackbar({
+                open: true,
+                severity: "warning",
+                message: "Ошибка при получении данных о товарах"
+            });
         }
-        });
-    }, []); */
+    }
 
     const checkProduct = (url) => {
         return isOzonProduct.test(url) && isCurrentSkuOzon.test(url);
@@ -83,8 +105,6 @@ function Main(){
         }
 
         setCurrentLink('');
-
-
     }
 
     const handleDelete = (productToDelete) => {
@@ -114,7 +134,7 @@ function Main(){
             <Button variant="contained" onClick={addProduct}>Добавить</Button>
             {isProduct &&
                 (<Fab style={{minWidth: '56px'}} color="primary" aria-label="add">
-                <AddIcon />
+                <AddIcon/>
                 </Fab>)
             }
             <Snackbar open={snackbar.open} autoHideDuration={2000} onClose={handleClose}>
@@ -149,7 +169,7 @@ function Main(){
                 ))}
                 </List>
             </Box>
-            <Button variant="contained">
+            <Button variant="contained" onClick={getProductsInfo}>
                 Перейти
             </Button>
          </Box>
@@ -159,5 +179,3 @@ function Main(){
 }
 
 export default Main
-
-

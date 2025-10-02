@@ -36,9 +36,9 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 function ProductTable(){
     const location = useLocation();
     
-    // const { productsInfo = [] } = location.state || {};
+     const { productsInfo = [] } = location.state || {};
     
-    const productsInfo = [{
+    /*const productsInfo = [{
       "sku": "2429929359",
       "name": "Haклейкa на карту \"Ворон с черепом\"",
       "cardPrice": 165,
@@ -62,7 +62,7 @@ function ProductTable(){
         "https://ir-9.ozone.ru/s3/multimedia-1-3/wc1000/7685161563.jpg"
       ],
       "brand": null
-    }];
+    }];*/
 
     if (!productsInfo || productsInfo.length === 0) {
         return (
@@ -99,13 +99,22 @@ function ProductTable(){
                     <TableBody>
                         <StyledTableRow>
                             <StyledTableCell component="th" scope="row">
+                                <strong>Название</strong>
+                            </StyledTableCell>
+                            {productsInfo.map((product, index) => (
+                                <StyledTableCell key={index} align="center">
+                                    {product.productName}
+                                </StyledTableCell>
+                            ))}
+                        </StyledTableRow>
+                        <StyledTableRow>
+                            <StyledTableCell component="th" scope="row">
                                 <strong>Цена</strong>
                             </StyledTableCell>
                             {productsInfo.map((product, index) => (
                                 <StyledTableCell key={index} align="center">
-                                    <Chip style={{textDecoration: 'line-through'}} label={`${product.originalPrice}₽`} />
-                                    <Chip label={`${product.price}₽`}/>
-                                    <Chip label={`${product.cardPrice}₽`} color="success"/>
+                                    <Chip style={{textDecoration: 'line-through'}} label={`${Math.max(product.currentPrice || -Infinity,product.cardPrice || -Infinity,product.originalPrice || -Infinity)}₽`} />
+                                    <Chip label={`${Math.min(product.currentPrice || Infinity,product.cardPrice || Infinity,product.originalPrice || Infinity)}₽`} color="success"/>
                                 </StyledTableCell>
                             ))}
                         </StyledTableRow>
@@ -116,7 +125,7 @@ function ProductTable(){
                             </StyledTableCell>
                             {productsInfo.map((product, index) => (
                                 <StyledTableCell key={index} align="center">
-                                    {product.rating}/5
+                                    {product.averageRating}
                                 </StyledTableCell>
                             ))}
                         </StyledTableRow>
@@ -165,7 +174,7 @@ function ProductTable(){
                             </StyledTableCell>
                             {productsInfo.map((product, index) => (
                                 <StyledTableCell key={index} align="center">
-                                    {product.sku}
+                                    {product.article}
                                 </StyledTableCell>
                             ))}
                         </StyledTableRow>
@@ -177,7 +186,7 @@ function ProductTable(){
                             {productsInfo.map((product, index) => (
                                 <StyledTableCell key={index} align="center">
                                     <a 
-                                        href={product.url} 
+                                        href={product.productUrl} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         style={{ fontSize: '0.8em' }}
@@ -195,8 +204,8 @@ function ProductTable(){
                                 <StyledTableCell key={index} align="center">
                                     <img 
                                     key={index}
-                                    src={product.imageUrls} 
-                                    alt={product.name}
+                                    src={product.imageUrl} 
+                                    alt={product.productName}
                                     style={{ 
                                         maxWidth: '200px', 
                                         maxHeight: '200px',

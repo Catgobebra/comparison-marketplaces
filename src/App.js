@@ -8,6 +8,7 @@ function App() {
    <Router>
       <Routes>
         <Route path="/" element={<Main />} />
+        <Route path="/index.html" element={<Main />} />
         <Route path="/comparison" element={<ProductTable/>} />
       </Routes> 
     </Router>

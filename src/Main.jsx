@@ -20,13 +20,18 @@ import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
+import {changeProducts} from './redux-state/reducers/products'
+
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 
 function Main(){
 
     const navigate = useNavigate();
 
-    const [products,setProducts] = useState([])
+    const dispatch = useDispatch()
+    const products = useSelector(state => state.products.products)
+
     const [currentLink, setCurrentLink] = useState('');
 
     const isOzonProduct = /https:\/\/www\.ozon\.ru\/product\/.+/i
@@ -40,6 +45,15 @@ function Main(){
         severity: "success",
         message: ""
     });
+
+    /*useEffect(() => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]?.url) {
+            setCurrentUrl(tabs[0].url)
+            setIsProduct(isOzonProduct.test(tabs[0].url))
+        }
+        });
+    }, []);*/
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -86,11 +100,11 @@ function Main(){
         return isOzonProduct.test(url) && isCurrentSkuOzon.test(url);
     }
     
-    const addProduct = () => {
-        const isValidProduct = checkProduct(currentLink) && !products.includes(currentLink.match(isCurrentSkuOzon)[1]);
+    const addProduct = (currentState,currentSetState) => {
+        const isValidProduct = checkProduct(currentState) && !products.includes(currentState.match(isCurrentSkuOzon)[1]);
 
         if (isValidProduct) {
-            setProducts([...products, currentLink.match(isCurrentSkuOzon)[1]]);
+            dispatch(changeProducts([...products, currentState.match(isCurrentSkuOzon)[1]]));
             setSnackbar({
                 open: true,
                 severity: "success",
@@ -104,11 +118,11 @@ function Main(){
             });
         }
 
-        setCurrentLink('');
+        currentSetState('');
     }
 
     const handleDelete = (productToDelete) => {
-        setProducts(products.filter(product => product !== productToDelete));
+        dispatch(changeProducts(products.filter(product => product !== productToDelete)));
     };
 
     const handleInputChange = (event) => {
@@ -131,9 +145,9 @@ function Main(){
             value={currentLink}
             onChange={handleInputChange}
             />
-            <Button variant="contained" onClick={addProduct}>Добавить</Button>
+            <Button variant="contained" onClick={() => addProduct(currentLink,setCurrentLink)}>Добавить</Button>
             {isProduct &&
-                (<Fab style={{minWidth: '56px'}} color="primary" aria-label="add">
+                (<Fab onClick={() => addProduct(currentUrl,setCurrentUrl)} style={{minWidth: '56px'}} color="primary" aria-label="add">
                 <AddIcon/>
                 </Fab>)
             }

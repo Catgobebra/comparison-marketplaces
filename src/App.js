@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Main from "./Main";
-import ProductTable from "./ProductTable";
+import Main from "./components/Main";
+import ProductTable from "./components/ProductTable";
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Main />} />
         <Route path="/index.html" element={<Main />} />
-        <Route path="/comparison" element={<ProductTable/>} />
+        <Route path="/comparison.html" element={<ProductTable/>} />
       </Routes> 
     </Router>
   );

@@ -20,7 +20,7 @@ import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
-import {changeProducts} from './redux-state/reducers/products'
+import {changeProducts} from '../redux-state/reducers/products'
 
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -46,14 +46,24 @@ function Main(){
         message: ""
     });
 
-    /*useEffect(() => {
+    useEffect(() => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.url) {
             setCurrentUrl(tabs[0].url)
             setIsProduct(isOzonProduct.test(tabs[0].url))
         }
         });
-    }, []);*/
+    }, []);
+
+    useEffect(() => {
+    chrome.storage.local.get(["myStoredArray"]).then((result) => {
+        console.log('Загружено:', result.myStoredArray);
+        if (result.myStoredArray && result.myStoredArray.length > 0) {
+        dispatch(changeProducts(result.myStoredArray));
+        }
+    });
+    
+    }, [dispatch]);
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -82,9 +92,14 @@ function Main(){
             
             console.log('Products info:', results);
             
-            navigate('/comparison', {
-                state: { productsInfo: results }
+            chrome.tabs.create({
+            url: 'http://localhost:3000/comparison',
+                active: true
             });
+            /* navigate('/comparison', {
+                state: { productsInfo: results }
+            }); */
+            
             
         } catch (error) {
             console.error('Ошибка при получении данных:', error);
@@ -104,7 +119,10 @@ function Main(){
         const isValidProduct = checkProduct(currentState) && !products.includes(currentState.match(isCurrentSkuOzon)[1]);
 
         if (isValidProduct) {
-            dispatch(changeProducts([...products, currentState.match(isCurrentSkuOzon)[1]]));
+            const newProducts = [...products, currentState.match(isCurrentSkuOzon)[1]];
+            dispatch(changeProducts(newProducts));
+
+            chrome.storage.local.set({ myStoredArray: newProducts }).then(() => {});
             setSnackbar({
                 open: true,
                 severity: "success",
@@ -122,7 +140,9 @@ function Main(){
     }
 
     const handleDelete = (productToDelete) => {
-        dispatch(changeProducts(products.filter(product => product !== productToDelete)));
+        const newProducts = products.filter(product => product !== productToDelete);
+        dispatch(changeProducts(newProducts));
+        chrome.storage.local.set({ myStoredArray: newProducts }).then(() => {});
     };
 
     const handleInputChange = (event) => {

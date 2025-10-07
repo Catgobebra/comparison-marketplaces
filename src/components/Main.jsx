@@ -42,6 +42,7 @@ function Main(){
 
     const [currentUrl, setCurrentUrl] = useState('');
     const [isProduct, setIsProduct] = useState(false);
+    const [showFab, setShowFab] = useState(false);
 
     const [load, setLoad] = React.useState(false);
     
@@ -54,11 +55,23 @@ function Main(){
     useEffect(() => {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]?.url) {
-            setCurrentUrl(tabs[0].url)
-            setIsProduct(isOzonProduct.test(tabs[0].url))
+            const url = tabs[0].url;
+            setCurrentUrl(url);
+            
+            const isOzon = isOzonProduct.test(url);
+            setIsProduct(isOzon);
+            
+            if (isOzon) {
+                const sku = url.match(isCurrentSkuOzon)?.[1];
+                const isAlreadyAdded = sku && products.some(product => product.article === sku);
+                setShowFab(!isAlreadyAdded);
+            } else {
+                setShowFab(false);
+            }
         }
         });
-    }, []);
+    }, [products]);
+
 
     useEffect(() => {
     chrome.storage.local.get(["myStoredArray"]).then((result) => {
@@ -136,6 +149,7 @@ function Main(){
         if (isValidProduct && !isAlreadyAdded) {
             //currentState.match(isCurrentSkuOzon)[1]
             getProductsInfo(currentState.match(isCurrentSkuOzon)[1])
+            setShowFab(false);
             //const newProducts = [...products, currentState.match(isCurrentSkuOzon)[1]];
             //dispatch(changeProducts(newProducts));
 
@@ -160,6 +174,10 @@ function Main(){
         const newProducts = products.filter(product => product !== productToDelete);
         dispatch(changeProducts(newProducts));
         chrome.storage.local.set({ myStoredArray: newProducts }).then(() => {});
+        const sku = currentUrl.match(isCurrentSkuOzon)?.[1];
+        if (sku && productToDelete.article === sku) {
+            setShowFab(true);
+        }
     };
 
     const handleInputChange = (event) => {
@@ -183,7 +201,7 @@ function Main(){
             onChange={handleInputChange}
             />
             <Button variant="contained" onClick={() => addProduct(currentLink,setCurrentLink)}>Добавить</Button>
-            {isProduct &&
+            {(showFab && isProduct) &&
                 (<Fab onClick={() => addProduct(currentUrl,setCurrentUrl)} style={{minWidth: '56px'}} color="primary" aria-label="add">
                 <AddIcon/>
                 </Fab>)
@@ -215,7 +233,7 @@ function Main(){
                 }
                 >
                 <InventoryIcon color="action" />
-                <ListItemText primary={`${value.productName}`} />
+                <ListItemText primary={`${value.productName.length > 30 ? value.productName.slice(0,30)+'...' : value.productName}`} />
                 </ListItem>
                 ))}
                 </List>

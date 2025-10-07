@@ -20,6 +20,9 @@ import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
+
 import {changeProducts} from '../redux-state/reducers/products'
 
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +43,8 @@ function Main(){
     const [currentUrl, setCurrentUrl] = useState('');
     const [isProduct, setIsProduct] = useState(false);
 
+    const [load, setLoad] = React.useState(false);
+    
     const [snackbar, setSnackbar] = useState({
         open: false,
         severity: "success",
@@ -62,7 +67,7 @@ function Main(){
         dispatch(changeProducts(result.myStoredArray));
         }
     });
-    
+
     }, [dispatch]);
 
     const handleClose = (event, reason) => {
@@ -72,9 +77,10 @@ function Main(){
         setSnackbar(prev => ({...prev, open: false}));
     };
 
-    const getProductsInfo = async () => {
+    const getProductsInfo = async (arg) => {
         try {
-            const promises = products.map(sku => 
+            setLoad(true)
+            const promises = [arg].map(sku => 
                 fetch(`http://localhost:5018/api/Products/by-sku/${sku}`, {
                     method: 'GET',
                     headers: {
@@ -91,11 +97,16 @@ function Main(){
             const results = await Promise.all(promises);
             
             console.log('Products info:', results);
+
+            const newProducts = [...products, ...results];
+            dispatch(changeProducts(newProducts));
+
+            chrome.storage.local.set({ myStoredArray: newProducts }).then(() => {});
             
-            chrome.tabs.create({
+            /* chrome.tabs.create({
             url: 'http://localhost:3000/comparison',
                 active: true
-            });
+            }); */
             /* navigate('/comparison', {
                 state: { productsInfo: results }
             }); */
@@ -109,6 +120,9 @@ function Main(){
                 message: "Ошибка при получении данных о товарах"
             });
         }
+        finally {
+            setLoad(false)
+        }
     }
 
     const checkProduct = (url) => {
@@ -116,14 +130,17 @@ function Main(){
     }
     
     const addProduct = (currentState,currentSetState) => {
-        const isValidProduct = checkProduct(currentState) && !products.includes(currentState.match(isCurrentSkuOzon)[1]);
+        const isAlreadyAdded = products.some(product => product.article === currentState.match(isCurrentSkuOzon)[1]);
+        const isValidProduct = checkProduct(currentState);
 
-        if (isValidProduct) {
-            const newProducts = [...products, currentState.match(isCurrentSkuOzon)[1]];
-            dispatch(changeProducts(newProducts));
+        if (isValidProduct && !isAlreadyAdded) {
+            //currentState.match(isCurrentSkuOzon)[1]
+            getProductsInfo(currentState.match(isCurrentSkuOzon)[1])
+            //const newProducts = [...products, currentState.match(isCurrentSkuOzon)[1]];
+            //dispatch(changeProducts(newProducts));
 
-            chrome.storage.local.set({ myStoredArray: newProducts }).then(() => {});
-            setSnackbar({
+            //chrome.storage.local.set({ myStoredArray: newProducts }).then(() => {});
+          /*   setSnackbar({
                 open: true,
                 severity: "success",
                 message: "Товар успешно добавлен"
@@ -133,7 +150,7 @@ function Main(){
                 open: true,
                 severity: "error",
                 message: "Неверная или пустая ссылка"
-            });
+            }); */
         }
 
         currentSetState('');
@@ -198,16 +215,23 @@ function Main(){
                 }
                 >
                 <InventoryIcon color="action" />
-                <ListItemText primary={`${value}`} />
+                <ListItemText primary={`${value.productName}`} />
                 </ListItem>
                 ))}
                 </List>
             </Box>
-            <Button variant="contained" onClick={getProductsInfo}>
+            <Button variant="contained">
                 Перейти
             </Button>
          </Box>
         </Container>
+        <Backdrop
+            sx={(theme) => ({ color: '#fff', zIndex: theme.zIndex.drawer + 1 })}
+            open={load}
+        >
+            <CircularProgress color="inherit" />
+        </Backdrop>
+
         </>
     )
 }

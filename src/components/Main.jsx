@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import Container from '@mui/material/Container';
 import TextField from '@mui/material/TextField';
 import { Button } from '@mui/material';
-import Badge from '@mui/material/Badge';
+
 import InventoryIcon from '@mui/icons-material/Inventory';
 import { useState, useEffect } from 'react';
 
@@ -16,6 +16,7 @@ import ListItemText from '@mui/material/ListItemText';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
+import Badge from '@mui/material/Badge';
 
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -110,7 +111,7 @@ function Main(){
             const results = await Promise.all(promises);
             
             console.log('Products info:', results);
-
+            if (results[0].productName === null) throw new Error("product is null");
             const newProducts = [...products, ...results];
             dispatch(changeProducts(newProducts));
 

@@ -142,7 +142,32 @@ function Main(){
     const checkProduct = (url) => {
         return isOzonProduct.test(url) && isCurrentSkuOzon.test(url);
     }
-    
+
+    const openComparisonPage = async () => {
+    chrome.tabs.create({
+        url: chrome.runtime.getURL('index.html#/comparison')
+    });
+    try {
+  const response = await fetch(`http://localhost:5018/api/batch`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(products)
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log('Данные успешно отправлены:', result);
+} catch (error) {
+  console.error('Ошибка при отправке данных:', error);
+}
+    };
+        
     const addProduct = (currentState,currentSetState) => {
         const isAlreadyAdded = products.some(product => product.article === currentState.match(isCurrentSkuOzon)[1]);
         const isValidProduct = checkProduct(currentState);
@@ -239,7 +264,7 @@ function Main(){
                 ))}
                 </List>
             </Box>
-            <Button variant="contained">
+            <Button variant="contained" onClick={openComparisonPage}>
                 Перейти
             </Button>
          </Box>

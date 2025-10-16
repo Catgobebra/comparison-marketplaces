@@ -17,6 +17,8 @@ import Rating from "@mui/material/Rating";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import Checkbox from '@mui/material/Checkbox';
 
 import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../redux-state/reducers/products";
@@ -41,19 +43,22 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-const AnimatedTableRow = styled(StyledTableRow)(({ theme, isexpanded }) => ({
-  maxHeight: isexpanded === "true" ? "1000px" : "0",
-  opacity: isexpanded === "true" ? 1 : 0,
-  overflow: "hidden",
-  transition: "all 0.3s ease-in-out",
-  display: isexpanded === "true" ? "table-row" : "none",
+
+const DraggableTableRow = styled(StyledTableRow)(({ theme, isdragging }) => ({
+  cursor: isdragging === "true" ? "grabbing" : "grab",
+  backgroundColor: isdragging === "true" ? theme.palette.action.selected : "inherit",
+  opacity: isdragging === "true" ? 0.6 : 1,
+  transition: "all 0.2s ease",
 }));
 
 function ProductTable() {
   const dispatch = useDispatch();
   const productsInfo = useSelector((state) => state.products.products);
-  const [characteristicsExpanded, setCharacteristicsExpanded] =
-    React.useState(true);
+  const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
+  const [draggedRow, setDraggedRow] = React.useState(null);
+  const [dragOverRow, setDragOverRow] = React.useState(null);
+  const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
+  const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
 
   useEffect(() => {
     chrome.storage.local.get(["myStoredArray"]).then((result) => {
@@ -69,6 +74,74 @@ function ProductTable() {
     "Продавец",
     "Ссылка на товар",
   ];
+
+  // Drag and Drop handlers for characteristics only
+  const handleDragStart = (e, index) => {
+    setDraggedRow(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/html", index);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedRow === null || draggedRow === index) return;
+    setDragOverRow(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverRow(null);
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    if (draggedRow === null || draggedRow === targetIndex) return;
+
+    const newOrder = [...orderedCharacteristics];
+    const [movedCharacteristic] = newOrder.splice(draggedRow, 1);
+    newOrder.splice(targetIndex, 0, movedCharacteristic);
+
+    setOrderedCharacteristics(newOrder);
+    
+    setDraggedRow(null);
+    setDragOverRow(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedRow(null);
+    setDragOverRow(null);
+  };
+
+  // Checkbox handlers
+  const handleSelectAllClick = (event) => {
+    if (event.target.checked) {
+      const newSelecteds = displayCharacteristics.map((n) => n.name);
+      setSelectedCharacteristics(newSelecteds);
+      return;
+    }
+    setSelectedCharacteristics([]);
+  };
+
+  const handleClick = (event, name) => {
+    const selectedIndex = selectedCharacteristics.indexOf(name);
+    let newSelected = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selectedCharacteristics, name);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selectedCharacteristics.slice(1));
+    } else if (selectedIndex === selectedCharacteristics.length - 1) {
+      newSelected = newSelected.concat(selectedCharacteristics.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selectedCharacteristics.slice(0, selectedIndex),
+        selectedCharacteristics.slice(selectedIndex + 1),
+      );
+    }
+
+    setSelectedCharacteristics(newSelected);
+  };
+
+  const isSelected = (name) => selectedCharacteristics.indexOf(name) !== -1;
 
   const getProductCharacteristics = (product) => {
     if (!product.characteristics) return [];
@@ -189,6 +262,15 @@ function ProductTable() {
 
   const commonCharacteristics = getCommonCharacteristics();
 
+  // Initialize ordered characteristics when common characteristics change
+  useEffect(() => {
+    if (commonCharacteristics.length > 0 && orderedCharacteristics.length === 0) {
+      setOrderedCharacteristics(commonCharacteristics);
+      // Select all characteristics by default
+      setSelectedCharacteristics(commonCharacteristics.map(char => char.name));
+    }
+  }, [commonCharacteristics, orderedCharacteristics.length]);
+
   if (!productsInfo || productsInfo.length === 0) {
     return (
       <div style={{ padding: "20px" }}>
@@ -201,10 +283,18 @@ function ProductTable() {
   const firstColumnWidth = "30%";
   const productColumnWidth = `${70 / productsInfo.length}%`;
 
+  // Use ordered characteristics for display
+  const displayCharacteristics = orderedCharacteristics.length > 0 
+    ? orderedCharacteristics 
+    : commonCharacteristics;
+
   return (
     <Box sx={{ padding: 2 }}>
       <Typography variant="h4" component="h1" gutterBottom>
         Сравнение товаров
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        💡 Перетаскивайте строки общих характеристик для изменения порядка
       </Typography>
       <TableContainer component={Paper}>
         <Table
@@ -375,6 +465,12 @@ function ProductTable() {
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center" }}>
+                  <Checkbox
+                    color="primary"
+                    indeterminate={selectedCharacteristics.length > 0 && selectedCharacteristics.length < displayCharacteristics.length}
+                    checked={displayCharacteristics.length > 0 && selectedCharacteristics.length === displayCharacteristics.length}
+                    onChange={handleSelectAllClick}
+                  />
                   <IconButton
                     aria-label="expand characteristics"
                     size="small"
@@ -394,40 +490,82 @@ function ProductTable() {
               </StyledTableCell>
             </StyledTableRow>
 
-            {/* ОБЩИЕ ХАРАКТЕРИСТИКИ */}
-            {commonCharacteristics.map((characteristic) => (
-              <AnimatedTableRow
-                key={characteristic.name}
-                isexpanded={characteristicsExpanded.toString()}
-              >
-                <StyledTableCell
-                  component="th"
-                  scope="row"
-                  sx={{ width: firstColumnWidth }}
+            {/* ОБЩИЕ ХАРАКТЕРИСТИКИ С DRAG-AND-DROP */}
+            {displayCharacteristics.map((characteristic, rowIndex) => {
+              const isItemSelected = isSelected(characteristic.name);
+              const labelId = `enhanced-table-checkbox-${rowIndex}`;
+
+              return (
+                <DraggableTableRow
+                  key={characteristic.name}
+                  isdragging={(draggedRow === rowIndex).toString()}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, rowIndex)}
+                  onDragOver={(e) => handleDragOver(e, rowIndex)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, rowIndex)}
+                  onDragEnd={handleDragEnd}
+                  style={{
+                    maxHeight: characteristicsExpanded ? "1000px" : "0",
+                    opacity: characteristicsExpanded ? 1 : 0,
+                    overflow: "hidden",
+                    transition: "all 0.3s ease-in-out",
+                    display: characteristicsExpanded ? "table-row" : "none",
+                  }}
                 >
-                  {characteristic.name}
-                </StyledTableCell>
-                {characteristic.values.map((value, index) => (
                   <StyledTableCell
-                    key={index}
-                    align="center"
-                    sx={{
-                      width: productColumnWidth,
-                      color: characteristic.isBestFlags[index]
-                        ? "success.dark"
-                        : "inherit",
-                      fontWeight: characteristic.isBestFlags[index]
-                        ? "bold"
-                        : "normal",
+                    component="th"
+                    scope="row"
+                    sx={{ 
+                      width: firstColumnWidth,
+                      position: "relative"
                     }}
                   >
-                    {value}
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Checkbox
+                        color="primary"
+                        checked={isItemSelected}
+                        inputProps={{
+                          'aria-labelledby': labelId,
+                        }}
+                        onClick={(event) => handleClick(event, characteristic.name)}
+                      />
+                      <DragIndicatorIcon 
+                        sx={{ 
+                          cursor: "grab", 
+                          color: "action.active",
+                          "&:hover": { color: "primary.main" },
+                          mr: 1
+                        }} 
+                      />
+                      {characteristic.name}
+                    </Box>
                   </StyledTableCell>
-                ))}
-              </AnimatedTableRow>
-            ))}
+                  {characteristic.values.map((value, index) => (
+                    <StyledTableCell
+                      key={index}
+                      align="center"
+                      sx={{
+                        width: productColumnWidth,
+                        color: characteristic.isBestFlags[index]
+                          ? "success.light"
+                          : "inherit",
+                        textShadow: characteristic.isBestFlags[index]
+                          ? "0px 2px 3px rgba(76, 175, 80, 1);"
+                          : "",  
+                        fontWeight: characteristic.isBestFlags[index]
+                          ? "bold"
+                          : "normal",
+                      }}
+                    >
+                      {value}
+                    </StyledTableCell>
+                  ))}
+                </DraggableTableRow>
+              );
+            })}
 
-            {commonCharacteristics.length === 0 && (
+            {displayCharacteristics.length === 0 && (
               <StyledTableRow>
                 <StyledTableCell component="th" scope="row">
                   <strong>Общие характеристики</strong>

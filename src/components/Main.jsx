@@ -301,9 +301,9 @@ function Main() {
                   <InventoryIcon color="action" />
                   <ListItemText
                     primary={`${
-                      value.productName.length > 30
-                        ? value.productName.slice(0, 30) + "..."
-                        : value.productName
+                      value.productName && value.productName.length > 30
+                          ? value.productName.slice(0, 30) + "..."
+                          : value.productName || "Неизвестный товар"
                     }`}
                   />
                 </ListItem>

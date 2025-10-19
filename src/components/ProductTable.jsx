@@ -18,7 +18,7 @@ import IconButton from "@mui/material/IconButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import Checkbox from '@mui/material/Checkbox';
+import Checkbox from "@mui/material/Checkbox";
 
 import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../redux-state/reducers/products";
@@ -43,10 +43,10 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-
 const DraggableTableRow = styled(StyledTableRow)(({ theme, isdragging }) => ({
   cursor: isdragging === "true" ? "grabbing" : "grab",
-  backgroundColor: isdragging === "true" ? theme.palette.action.selected : "inherit",
+  backgroundColor:
+    isdragging === "true" ? theme.palette.action.selected : "inherit",
   opacity: isdragging === "true" ? 0.6 : 1,
   transition: "all 0.2s ease",
 }));
@@ -54,11 +54,20 @@ const DraggableTableRow = styled(StyledTableRow)(({ theme, isdragging }) => ({
 function ProductTable() {
   const dispatch = useDispatch();
   const productsInfo = useSelector((state) => state.products.products);
-  const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
+  const [characteristicsExpanded, setCharacteristicsExpanded] =
+    React.useState(true);
   const [draggedRow, setDraggedRow] = React.useState(null);
   const [dragOverRow, setDragOverRow] = React.useState(null);
-  const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
-  const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
+  const [orderedCharacteristics, setOrderedCharacteristics] = React.useState(
+    []
+  );
+  const [selectedCharacteristics, setSelectedCharacteristics] = React.useState(
+    []
+  );
+
+  console.log(characteristicsExpanded);
+  console.log(orderedCharacteristics);
+  console.log(selectedCharacteristics);
 
   useEffect(() => {
     chrome.storage.local.get(["myStoredArray"]).then((result) => {
@@ -101,7 +110,7 @@ function ProductTable() {
     newOrder.splice(targetIndex, 0, movedCharacteristic);
 
     setOrderedCharacteristics(newOrder);
-    
+
     setDraggedRow(null);
     setDragOverRow(null);
   };
@@ -134,7 +143,7 @@ function ProductTable() {
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selectedCharacteristics.slice(0, selectedIndex),
-        selectedCharacteristics.slice(selectedIndex + 1),
+        selectedCharacteristics.slice(selectedIndex + 1)
       );
     }
 
@@ -264,10 +273,15 @@ function ProductTable() {
 
   // Initialize ordered characteristics when common characteristics change
   useEffect(() => {
-    if (commonCharacteristics.length > 0 && orderedCharacteristics.length === 0) {
+    if (
+      commonCharacteristics.length > 0 &&
+      orderedCharacteristics.length === 0
+    ) {
       setOrderedCharacteristics(commonCharacteristics);
       // Select all characteristics by default
-      setSelectedCharacteristics(commonCharacteristics.map(char => char.name));
+      setSelectedCharacteristics(
+        commonCharacteristics.map((char) => char.name)
+      );
     }
   }, [commonCharacteristics, orderedCharacteristics.length]);
 
@@ -284,9 +298,10 @@ function ProductTable() {
   const productColumnWidth = `${70 / productsInfo.length}%`;
 
   // Use ordered characteristics for display
-  const displayCharacteristics = orderedCharacteristics.length > 0 
-    ? orderedCharacteristics 
-    : commonCharacteristics;
+  const displayCharacteristics =
+    orderedCharacteristics.length > 0
+      ? orderedCharacteristics
+      : commonCharacteristics;
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -467,8 +482,16 @@ function ProductTable() {
                 <Box sx={{ display: "flex", alignItems: "center" }}>
                   <Checkbox
                     color="primary"
-                    indeterminate={selectedCharacteristics.length > 0 && selectedCharacteristics.length < displayCharacteristics.length}
-                    checked={displayCharacteristics.length > 0 && selectedCharacteristics.length === displayCharacteristics.length}
+                    indeterminate={
+                      selectedCharacteristics.length > 0 &&
+                      selectedCharacteristics.length <
+                        displayCharacteristics.length
+                    }
+                    checked={
+                      displayCharacteristics.length > 0 &&
+                      selectedCharacteristics.length ===
+                        displayCharacteristics.length
+                    }
                     onChange={handleSelectAllClick}
                   />
                   <IconButton
@@ -516,9 +539,9 @@ function ProductTable() {
                   <StyledTableCell
                     component="th"
                     scope="row"
-                    sx={{ 
+                    sx={{
                       width: firstColumnWidth,
-                      position: "relative"
+                      position: "relative",
                     }}
                   >
                     <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -526,17 +549,19 @@ function ProductTable() {
                         color="primary"
                         checked={isItemSelected}
                         inputProps={{
-                          'aria-labelledby': labelId,
+                          "aria-labelledby": labelId,
                         }}
-                        onClick={(event) => handleClick(event, characteristic.name)}
+                        onClick={(event) =>
+                          handleClick(event, characteristic.name)
+                        }
                       />
-                      <DragIndicatorIcon 
-                        sx={{ 
-                          cursor: "grab", 
+                      <DragIndicatorIcon
+                        sx={{
+                          cursor: "grab",
                           color: "action.active",
                           "&:hover": { color: "primary.main" },
-                          mr: 1
-                        }} 
+                          mr: 1,
+                        }}
                       />
                       {characteristic.name}
                     </Box>
@@ -552,7 +577,7 @@ function ProductTable() {
                           : "inherit",
                         textShadow: characteristic.isBestFlags[index]
                           ? "0px 2px 3px rgba(76, 175, 80, 1);"
-                          : "",  
+                          : "",
                         fontWeight: characteristic.isBestFlags[index]
                           ? "bold"
                           : "normal",

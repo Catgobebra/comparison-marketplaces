@@ -59,8 +59,7 @@ function Main() {
     }
     try {
       await addBySku(sku);
-    } catch (e) {
-    }
+    } catch (e) {}
     setCurrentLink("");
   };
 
@@ -71,8 +70,7 @@ function Main() {
   const handleOpenCompare = async () => {
     try {
       await doCompare();
-    } catch (e) {
-    }
+    } catch (e) {}
     try {
       if (typeof chrome !== "undefined" && chrome.tabs?.create) {
         chrome.tabs.create({

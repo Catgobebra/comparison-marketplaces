@@ -4,14 +4,14 @@ import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
-import AddProductForm from "../components/AddProductForm";
-import ProductList from "../components/ProductList";
-import CartBadge from "../components/CartBadge";
-import LoadingBackdrop from "../components/LoadingBackdrop";
-import SnackbarAlert from "../components/SnackbarAlert";
+import AddProductForm from "../comps/AddProductForm";
+import ProductList from "../views/local/ProductList";
+import CartBadge from "../comps/CartBadge";
+import LoadingBackdrop from "../comps/LoadingBackdrop";
+import SnackbarAlert from "../comps/SnackbarAlert";
 
-import useProducts from "../hooks/useProducts";
-import { isValidOzonUrl, parseSku } from "../utils/ozon";
+import useProducts from "../../hooks/useProducts";
+import { isValidOzonUrl, parseSku } from "../../utils/ozon";
 
 function Main() {
   const {
@@ -60,7 +60,6 @@ function Main() {
     try {
       await addBySku(sku);
     } catch (e) {
-      // error already handled inside hook
     }
     setCurrentLink("");
   };
@@ -73,7 +72,6 @@ function Main() {
     try {
       await doCompare();
     } catch (e) {
-      // handled in hook
     }
     try {
       if (typeof chrome !== "undefined" && chrome.tabs?.create) {

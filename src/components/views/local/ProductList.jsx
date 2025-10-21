@@ -1,6 +1,6 @@
 import React from "react";
 import List from "@mui/material/List";
-import ProductListItem from "./ProductListItem";
+import ProductListItem from "../../comps/ProductListItem";
 
 export default function ProductList({ products, onDelete }) {
   return (

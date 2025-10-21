@@ -19,9 +19,10 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import Checkbox from "@mui/material/Checkbox";
+import TextField from '@mui/material/TextField';
 
 import { useDispatch, useSelector } from "react-redux";
-import { changeProducts } from "../redux-state/reducers/products";
+import { changeProducts } from "../../redux-state/reducers/products";
 import { useEffect } from "react";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -63,11 +64,59 @@ function ProductTable() {
   );
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState(
     []
-  );
+  ); // Где чекбокс стоит
 
-  console.log(characteristicsExpanded);
+  const [rankItems, setRankItems] = React.useState(
+    []
+  ); 
+
+  useEffect(() => {
+  if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0) return;
+  
+  const rank = new Array(productsInfo.length).fill(0);
+  
+  orderedCharacteristics.forEach(characteristic => {
+    if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
+      characteristic.isBestFlags.forEach((isBest, productIndex) => {
+        if (isBest && productIndex < rank.length) {
+          rank[productIndex] += characteristic.costWeight;
+        }
+      });
+    }
+  });
+  
+  setRankItems(rank);
+}, [orderedCharacteristics, productsInfo])
+
+  console.log(rankItems)
+  /*
+  должен получить сумму характеристик
+  */
+
+  /*
+  checkbox active *= 10
+  вес - от -1 до 1
+  формула баллов = (количетсво характеристик - текущая позиция в рейтинге) * 10 * вес * checkbox active
+  */
+
+  const handleWeightChange = (event, rowIndex) => {
+  const newValue = parseFloat(event.target.value) || 1;
+  
+  const updatedCharacteristics = [...orderedCharacteristics];
+  const currentCharacteristic = updatedCharacteristics[rowIndex]; // Получаем текущую характеристику
+  
+  updatedCharacteristics[rowIndex] = {
+    ...currentCharacteristic,
+    costWeight: getCostWeight(currentCharacteristic.name, updatedCharacteristics.length, rowIndex, selectedCharacteristics, newValue),
+    manualWeight: newValue
+  };
+  
+  setOrderedCharacteristics(updatedCharacteristics);
+};
+
+
+
   console.log(orderedCharacteristics);
-  console.log(selectedCharacteristics);
 
   useEffect(() => {
     chrome.storage.local.get(["myStoredArray"]).then((result) => {
@@ -84,7 +133,6 @@ function ProductTable() {
     "Ссылка на товар",
   ];
 
-  // Drag and Drop handlers for characteristics only
   const handleDragStart = (e, index) => {
     setDraggedRow(index);
     e.dataTransfer.effectAllowed = "move";
@@ -109,7 +157,12 @@ function ProductTable() {
     const [movedCharacteristic] = newOrder.splice(draggedRow, 1);
     newOrder.splice(targetIndex, 0, movedCharacteristic);
 
-    setOrderedCharacteristics(newOrder);
+    const updatedOrder = newOrder.map((char, index) => ({
+      ...char,
+      costWeight: (char.costWeight > 0)  ? getCostWeight(char.name, newOrder.length, index, selectedCharacteristics,char.manualWeight) : 0
+    }));
+
+    setOrderedCharacteristics(updatedOrder);
 
     setDraggedRow(null);
     setDragOverRow(null);
@@ -120,35 +173,52 @@ function ProductTable() {
     setDragOverRow(null);
   };
 
-  // Checkbox handlers
   const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = displayCharacteristics.map((n) => n.name);
-      setSelectedCharacteristics(newSelecteds);
-      return;
-    }
-    setSelectedCharacteristics([]);
-  };
+  if (event.target.checked) {
+    const newSelecteds = displayCharacteristics.map((n) => n.name);
+    setSelectedCharacteristics(newSelecteds);
+    
+    const updatedCharacteristics = orderedCharacteristics.map((char, index) => ({
+      ...char,
+      costWeight: (char.costWeight > 0) ? getCostWeight(char.name, orderedCharacteristics.length, index, newSelecteds,char.manualWeight) : 0
+    }));
+    setOrderedCharacteristics(updatedCharacteristics);
+    return;
+  }
+  
+  setSelectedCharacteristics([]);
+  const updatedCharacteristics = orderedCharacteristics.map((char, index) => ({
+    ...char,
+    costWeight: (char.costWeight > 0) ? getCostWeight(char.name, orderedCharacteristics.length, index, [],char.manualWeight) : 0
+  }));
+  setOrderedCharacteristics(updatedCharacteristics);
+};
 
-  const handleClick = (event, name) => {
-    const selectedIndex = selectedCharacteristics.indexOf(name);
-    let newSelected = [];
+const handleClick = (event, name) => {
+  const selectedIndex = selectedCharacteristics.indexOf(name);
+  let newSelected = [];
 
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selectedCharacteristics, name);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selectedCharacteristics.slice(1));
-    } else if (selectedIndex === selectedCharacteristics.length - 1) {
-      newSelected = newSelected.concat(selectedCharacteristics.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selectedCharacteristics.slice(0, selectedIndex),
-        selectedCharacteristics.slice(selectedIndex + 1)
-      );
-    }
+  if (selectedIndex === -1) {
+    newSelected = newSelected.concat(selectedCharacteristics, name);
+  } else if (selectedIndex === 0) {
+    newSelected = newSelected.concat(selectedCharacteristics.slice(1));
+  } else if (selectedIndex === selectedCharacteristics.length - 1) {
+    newSelected = newSelected.concat(selectedCharacteristics.slice(0, -1));
+  } else if (selectedIndex > 0) {
+    newSelected = newSelected.concat(
+      selectedCharacteristics.slice(0, selectedIndex),
+      selectedCharacteristics.slice(selectedIndex + 1)
+    );
+  }
 
-    setSelectedCharacteristics(newSelected);
-  };
+  setSelectedCharacteristics(newSelected);
+  
+  const updatedCharacteristics = orderedCharacteristics.map((char, index) => ({
+    ...char,
+    costWeight: (char.costWeight > 0) ? getCostWeight(char.name, orderedCharacteristics.length, index, newSelected, char.manualWeight) : 0
+  }));
+  setOrderedCharacteristics(updatedCharacteristics);
+};
 
   const isSelected = (name) => selectedCharacteristics.indexOf(name) !== -1;
 
@@ -232,7 +302,7 @@ function ProductTable() {
       }
     );
 
-    const result = commonCharNames.map((charName) => {
+    const result = commonCharNames.map((charName,index_) => {
       const values = [];
       const isBestFlags = [];
 
@@ -243,11 +313,15 @@ function ProductTable() {
           isBestFlags.push(char.isBest);
         }
       });
+      
+      const isCompare = isBestFlags.some(x => x)
 
       return {
         name: charName,
         values: values,
         isBestFlags: isBestFlags,
+        manualWeight: 1,
+        costWeight : isCompare ? getCostWeight(charName, commonCharNames.length, index_, selectedCharacteristics) : 0,
       };
     });
 
@@ -269,21 +343,20 @@ function ProductTable() {
     };
   };
 
+  const getCostWeight = (name,len_,position, selectedChars, manualWeight = 1) => (10 + (len_ - position)) * manualWeight  * (selectedChars.includes(name) ? 10 : 1) 
+
   const commonCharacteristics = getCommonCharacteristics();
 
-  // Initialize ordered characteristics when common characteristics change
   useEffect(() => {
-    if (
-      commonCharacteristics.length > 0 &&
-      orderedCharacteristics.length === 0
-    ) {
-      setOrderedCharacteristics(commonCharacteristics);
-      // Select all characteristics by default
-      setSelectedCharacteristics(
-        commonCharacteristics.map((char) => char.name)
-      );
-    }
-  }, [commonCharacteristics, orderedCharacteristics.length]);
+  if (commonCharacteristics.length > 0 && orderedCharacteristics.length === 0) {
+    const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
+      ...char,
+      costWeight: (char.costWeight > 0) ? getCostWeight(char.name, commonCharacteristics.length, index, selectedCharacteristics, char.manualWeight) : 0
+    }));
+    setOrderedCharacteristics(characteristicsWithWeights);
+    setSelectedCharacteristics(commonCharacteristics.map((char) => char.name));
+  }
+}, [commonCharacteristics, orderedCharacteristics.length]);
 
   if (!productsInfo || productsInfo.length === 0) {
     return (
@@ -297,7 +370,6 @@ function ProductTable() {
   const firstColumnWidth = "30%";
   const productColumnWidth = `${70 / productsInfo.length}%`;
 
-  // Use ordered characteristics for display
   const displayCharacteristics =
     orderedCharacteristics.length > 0
       ? orderedCharacteristics
@@ -554,6 +626,16 @@ function ProductTable() {
                         onClick={(event) =>
                           handleClick(event, characteristic.name)
                         }
+                      />
+                      <TextField id={`weight-${rowIndex}`} label="Вес" 
+                      value={characteristic.manualWeight || 1}
+                      variant="standard" style={{width : "50px"}}
+                      onChange={(event) => handleWeightChange(event, rowIndex)}
+                      inputProps={{ 
+                        min: "0.1", 
+                        max: "10", 
+                        step: "0.1" 
+                      }}
                       />
                       <DragIndicatorIcon
                         sx={{

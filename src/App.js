@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-import Main from "./components/Main";
-import ProductTable from "./components/ProductTable";
+import Main from "./components/pages/Main";
+import ProductTable from "./components/pages/ProductTable";
 
 function App() {
   return (

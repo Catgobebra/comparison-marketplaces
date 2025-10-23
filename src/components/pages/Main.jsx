@@ -13,6 +13,8 @@ import SnackbarAlert from "../comps/SnackbarAlert";
 import useProducts from "../../hooks/useProducts";
 import { isValidOzonUrl, parseSku } from "../../utils/ozon";
 
+import styles from './Main.module.sass';
+
 function Main() {
   const {
     products,
@@ -90,32 +92,23 @@ function Main() {
   return (
     <>
       <Container
-        maxWidth="lg"
-        style={{
-          minWidth: "400px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-        }}
+        className={styles.popup}
       >
-        <Box style={{ padding: "10px" }}>
-          <Box
-            style={{
-              display: "flex",
-              gap: 20,
-              position: "relative",
-              marginTop: "50px",
-            }}
-          >
-            <CartBadge count={products.length} />
-            <AddProductForm
+        <nav>
+          <AddProductForm
               value={currentLink}
               onChange={handleInputChange}
               onAdd={handleAdd}
               showFab={showFab}
               onAddFromTab={handleAddFromTab}
-            />
+          />
+        </nav>
+        <Box style={{ padding: "10px" }}>
+          <Box
+            style={{
+            }}
+          >
+            <CartBadge count={products.length} />
             <SnackbarAlert
               open={snackbar.open}
               severity={snackbar.severity}

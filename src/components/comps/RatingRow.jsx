@@ -4,6 +4,7 @@ import Chip from "@mui/material/Chip";
 import Rating from "@mui/material/Rating";
 import Typography from "@mui/material/Typography";
 import { StyledTableRow, StyledTableCell } from "./styledComponents";
+import ReliabilityChip from './ReliabilityChip';
 import {
   ratingConfidenceInterval,
   getStatusRank,
@@ -19,17 +20,6 @@ export default function RatingRow({ productsInfo }) {
         <StyledTableCell key={index} align="center">
           {product.averageRating
             ? (() => {
-                const [low, high] = ratingConfidenceInterval(
-                  product.averageRating,
-                  product.reviewsCount
-                );
-                const reliability = getStatusRank(low, high);
-                const chipColor =
-                  reliability === "высокая"
-                    ? "success"
-                    : reliability === "средняя"
-                    ? "warning"
-                    : "error";
                 return (
                   <Box
                     sx={{
@@ -45,12 +35,7 @@ export default function RatingRow({ productsInfo }) {
                       precision={0.01}
                       readOnly
                     />
-                    <Chip
-                      label={`Надежность: ${reliability}`}
-                      color={chipColor}
-                      size="small"
-                      variant="outlined"
-                    />
+                    <ReliabilityChip averageRating={product.averageRating} reviewsCount={product.reviewsCount}/>
                     <Typography variant="caption" color="text.secondary">
                       {product.averageRating.toFixed(1)} ({product.reviewsCount}
                       )

@@ -9,11 +9,15 @@ import ProductList from "../views/local/ProductList";
 import CartBadge from "../comps/CartBadge";
 import LoadingBackdrop from "../comps/LoadingBackdrop";
 import SnackbarAlert from "../comps/SnackbarAlert";
+import CategoriesList from "../comps/CategoriesList";
 
 import useProducts from "../../hooks/useProducts";
 import { isValidOzonUrl, parseSku } from "../../utils/ozon";
 
-import styles from './Main.module.sass';
+import styles from "./Main.module.sass";
+import { alignItems, display, flexDirection, height, style } from "@mui/system";
+
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
 function Main() {
   const {
@@ -91,43 +95,57 @@ function Main() {
 
   return (
     <>
-      <Container
-        className={styles.popup}
-      >
+      <Box className={styles.popup}>
         <nav>
           <AddProductForm
-              value={currentLink}
-              onChange={handleInputChange}
-              onAdd={handleAdd}
-              showFab={showFab}
-              onAddFromTab={handleAddFromTab}
+            value={currentLink}
+            onChange={handleInputChange}
+            onAdd={handleAdd}
+            showFab={showFab}
+            onAddFromTab={handleAddFromTab}
           />
         </nav>
-        <Box style={{ padding: "10px" }}>
+        <Box style={{ display: "flex",height: "100%", width: "100%"}}>
           <Box
             style={{
+              height: "100%"
+            }}
+            className={styles.listCategories}
+          >
+            <CategoriesList />
+          </Box>
+          <Box
+            style={{
+              padding: "10px",
+              height: "100%",
+              width: "100%",
+              display : 'flex',
+              alignItems : 'center',
+              justifyContent : 'flex-end',
+              flexDirection: 'column',
+              gap: '20px'
             }}
           >
-            <CartBadge count={products.length} />
-            <SnackbarAlert
-              open={snackbar.open}
-              severity={snackbar.severity}
-              message={snackbar.message}
-              onClose={handleSnackbarClose}
-            />
-          </Box>
+            <Box>
+              <CartBadge count={products.length} />
+              <SnackbarAlert
+                open={snackbar.open}
+                severity={snackbar.severity}
+                message={snackbar.message}
+                onClose={handleSnackbarClose}
+              />
+            </Box>
 
-          <Box>
-            <ProductList products={products} onDelete={handleDelete} />
+            <Box style={{height: "80%", width: "100%", overflow : 'auto'}}>
+              <ProductList products={products} onDelete={handleDelete} />
+            </Box>
+            <Button variant="contained" onClick={handleOpenCompare} className={styles.nextButton} endIcon={<ArrowRightAltIcon />}>
+              Перейти
+            </Button>
           </Box>
-
-          <Button variant="contained" onClick={handleOpenCompare}>
-            Перейти
-          </Button>
+          <LoadingBackdrop open={loading} />
         </Box>
-      </Container>
-
-      <LoadingBackdrop open={loading} />
+      </Box>
     </>
   );
 }

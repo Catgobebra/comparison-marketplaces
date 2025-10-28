@@ -1,7 +1,7 @@
 import React from "react";
 import { StyledTableRow, StyledTableCell } from "./styledComponents";
 
-export default function AdditionalInfoRows({ productsInfo }) {
+export default function AdditionalInfoRows({ productsInfo,rankItems }) {
   return (
     <>
       <StyledTableRow>
@@ -55,6 +55,17 @@ export default function AdditionalInfoRows({ productsInfo }) {
             ) : (
               "—"
             )}
+          </StyledTableCell>
+        ))}
+      </StyledTableRow>
+
+      <StyledTableRow>
+        <StyledTableCell component="th" scope="row">
+          <strong>Оценка</strong>
+        </StyledTableCell>
+        {rankItems.map((product, index) => (
+          <StyledTableCell key={index} align="center">
+            {product || 0}
           </StyledTableCell>
         ))}
       </StyledTableRow>

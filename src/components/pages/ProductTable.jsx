@@ -24,16 +24,11 @@ export default function ProductTable() {
   const dispatch = useDispatch();
   const productsInfo = useSelector((state) => state.products.products);
 
-  const [characteristicsExpanded, setCharacteristicsExpanded] =
-    React.useState(true);
-  const [draggedRow, setDraggedRow] = React.useState(null);
-  const [dragOverRow, setDragOverRow] = React.useState(null);
-  const [orderedCharacteristics, setOrderedCharacteristics] = React.useState(
-    []
-  );
-  const [selectedCharacteristics, setSelectedCharacteristics] = React.useState(
-    []
-  );
+  const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
+  const [draggedItem, setDraggedItem] = React.useState(null);
+  const [dragOverItem, setDragOverItem] = React.useState(null);
+  const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
+  const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
 
   React.useEffect(() => {
@@ -48,11 +43,7 @@ export default function ProductTable() {
       return;
     const rank = new Array(productsInfo.length).fill(0);
     orderedCharacteristics.forEach((characteristic) => {
-      if (
-        characteristic &&
-        characteristic.isBestFlags &&
-        characteristic.costWeight
-      ) {
+      if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
         characteristic.isBestFlags.forEach((isBest, productIndex) => {
           if (isBest && productIndex < rank.length)
             rank[productIndex] += characteristic.costWeight;
@@ -65,21 +56,17 @@ export default function ProductTable() {
   const getProductCharacteristics = (product) => {
     if (!product.characteristics) return [];
     const characteristics = [];
-    product.characteristics.forEach((group) => {
-      group.characteristics?.forEach((char) => {
-        if (
-          ["Артикул", "Бренд", "Продавец", "Ссылка на товар"].includes(
-            char.name
-          ) ||
-          !char.value ||
-          char.value === "—"
-        )
-          return;
-        characteristics.push({
-          name: char.name,
-          value: char.value,
-          isBest: char.isBest || false,
-        });
+    Object.values(product.characteristics).forEach((char) => {
+      if (
+        ["Артикул", "Бренд", "Продавец", "Ссылка на товар"].includes(char.name) ||
+        !char.value ||
+        char.value === "—"
+      )
+        return;
+      characteristics.push({
+        name: char.name,
+        value: char.value,
+        isBest: char.isBest || false,
       });
     });
     return characteristics;
@@ -130,35 +117,54 @@ export default function ProductTable() {
   const commonCharacteristics = getCommonCharacteristics();
 
   React.useEffect(() => {
-    if (
-      commonCharacteristics.length > 0 &&
-      orderedCharacteristics.length === 0
-    ) {
-      const characteristicsWithWeights = commonCharacteristics.map(
-        (char, index) => ({
-          ...char,
-          costWeight:
-            char.costWeight > 0
-              ? getCostWeight(
-                  char.name,
-                  commonCharacteristics.length,
-                  index,
-                  selectedCharacteristics,
-                  char.manualWeight
-                )
-              : 0,
-        })
-      );
+    if (commonCharacteristics.length > 0 && orderedCharacteristics.length === 0) {
+      const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
+        ...char,
+        costWeight:
+          char.costWeight > 0
+            ? getCostWeight(
+                char.name,
+                commonCharacteristics.length,
+                index,
+                selectedCharacteristics,
+                char.manualWeight
+              )
+            : 0,
+      }));
       setOrderedCharacteristics(characteristicsWithWeights);
-      setSelectedCharacteristics(
-        commonCharacteristics.map((char) => char.name)
-      );
     }
-  }, [
-    commonCharacteristics,
-    orderedCharacteristics.length,
-    selectedCharacteristics,
-  ]);
+  }, [commonCharacteristics, orderedCharacteristics.length, selectedCharacteristics]);
+
+  const updateCharacteristicsOrder = (newSelected) => {
+    const selectedChars = orderedCharacteristics.filter(char => 
+      newSelected.includes(char.name)
+    );
+    const unselectedChars = orderedCharacteristics.filter(char => 
+      !newSelected.includes(char.name)
+    );
+    
+    const orderedSelectedChars = newSelected.map(name => 
+      selectedChars.find(char => char.name === name)
+    ).filter(Boolean);
+    
+    const newOrdered = [...orderedSelectedChars, ...unselectedChars];
+    
+    const updatedOrder = newOrdered.map((char, index) => ({
+      ...char,
+      costWeight:
+        char.costWeight > 0
+          ? getCostWeight(
+              char.name,
+              newOrdered.length,
+              index,
+              newSelected,
+              char.manualWeight
+            )
+          : 0,
+    }));
+    
+    setOrderedCharacteristics(updatedOrder);
+  };
 
   if (!productsInfo || productsInfo.length === 0)
     return (
@@ -170,28 +176,41 @@ export default function ProductTable() {
 
   const firstColumnWidth = "30%";
   const productColumnWidth = `${70 / productsInfo.length}%`;
-  const displayCharacteristics =
-    orderedCharacteristics.length > 0
-      ? orderedCharacteristics
-      : commonCharacteristics;
+  
+  const displayedCharacteristics = [
+    ...orderedCharacteristics.filter(item => item.isBestFlags.some(x => x)),
+    ...orderedCharacteristics.filter(item => !item.isBestFlags.some(x => x))
+  ];
 
-  const handleDragStart = (e, index) => {
-    setDraggedRow(index);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/html", index);
+  const handleDragStart = (characteristicName) => {
+    setDraggedItem(characteristicName);
   };
-  const handleDragOver = (e, index) => {
+
+  const handleDragOver = (e, characteristicName) => {
     e.preventDefault();
-    if (draggedRow === null || draggedRow === index) return;
-    setDragOverRow(index);
+    if (draggedItem && draggedItem !== characteristicName) {
+      setDragOverItem(characteristicName);
+    }
   };
-  const handleDragLeave = () => setDragOverRow(null);
-  const handleDrop = (e, targetIndex) => {
-    e.preventDefault();
-    if (draggedRow === null || draggedRow === targetIndex) return;
+
+  const handleDragLeave = () => {
+    setDragOverItem(null);
+  };
+
+  const handleDrop = (targetCharacteristicName) => {
+    if (!draggedItem || draggedItem === targetCharacteristicName) {
+      return;
+    }
+
     const newOrder = [...orderedCharacteristics];
-    const [movedCharacteristic] = newOrder.splice(draggedRow, 1);
-    newOrder.splice(targetIndex, 0, movedCharacteristic);
+    const draggedIndex = newOrder.findIndex(char => char.name === draggedItem);
+    const targetIndex = newOrder.findIndex(char => char.name === targetCharacteristicName);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const [movedItem] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, movedItem);
+
     const updatedOrder = newOrder.map((char, index) => ({
       ...char,
       costWeight:
@@ -205,110 +224,55 @@ export default function ProductTable() {
             )
           : 0,
     }));
+
     setOrderedCharacteristics(updatedOrder);
-    setDraggedRow(null);
-    setDragOverRow(null);
-  };
-  const handleDragEnd = () => {
-    setDraggedRow(null);
-    setDragOverRow(null);
+    setDraggedItem(null);
+    setDragOverItem(null);
   };
 
-  const handleSelectAllClick = (event) => {
-    if (event.target.checked) {
-      const newSelecteds = displayCharacteristics.map((n) => n.name);
-      setSelectedCharacteristics(newSelecteds);
-      const updatedCharacteristics = orderedCharacteristics.map(
-        (char, index) => ({
-          ...char,
-          costWeight:
-            char.costWeight > 0
-              ? getCostWeight(
-                  char.name,
-                  orderedCharacteristics.length,
-                  index,
-                  newSelecteds,
-                  char.manualWeight
-                )
-              : 0,
-        })
-      );
-      setOrderedCharacteristics(updatedCharacteristics);
-      return;
-    }
-    setSelectedCharacteristics([]);
-    const updatedCharacteristics = orderedCharacteristics.map(
-      (char, index) => ({
-        ...char,
-        costWeight:
-          char.costWeight > 0
-            ? getCostWeight(
-                char.name,
-                orderedCharacteristics.length,
-                index,
-                [],
-                char.manualWeight
-              )
-            : 0,
-      })
-    );
-    setOrderedCharacteristics(updatedCharacteristics);
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverItem(null);
   };
 
   const handleToggleSelect = (event, name) => {
     const selectedIndex = selectedCharacteristics.indexOf(name);
     let newSelected = [];
-    if (selectedIndex === -1)
-      newSelected = newSelected.concat(selectedCharacteristics, name);
-    else if (selectedIndex === 0)
-      newSelected = newSelected.concat(selectedCharacteristics.slice(1));
-    else if (selectedIndex === selectedCharacteristics.length - 1)
-      newSelected = newSelected.concat(selectedCharacteristics.slice(0, -1));
-    else if (selectedIndex > 0)
-      newSelected = newSelected.concat(
-        selectedCharacteristics.slice(0, selectedIndex),
-        selectedCharacteristics.slice(selectedIndex + 1)
-      );
+
+    if (selectedIndex === -1) {
+      newSelected = [...selectedCharacteristics, name];
+    } else {
+      newSelected = selectedCharacteristics.filter(item => item !== name);
+    }
+    
     setSelectedCharacteristics(newSelected);
-    const updatedCharacteristics = orderedCharacteristics.map(
-      (char, index) => ({
-        ...char,
-        costWeight:
-          char.costWeight > 0
-            ? getCostWeight(
-                char.name,
-                orderedCharacteristics.length,
-                index,
-                newSelected,
-                char.manualWeight
-              )
-            : 0,
-      })
-    );
-    setOrderedCharacteristics(updatedCharacteristics);
+    updateCharacteristicsOrder(newSelected);
   };
 
   const isSelected = (name) => selectedCharacteristics.indexOf(name) !== -1;
 
-  const handleWeightChange = (event, rowIndex) => {
+  const handleWeightChange = (event, characteristicName) => {
+    const charIndex = orderedCharacteristics.findIndex(char => char.name === characteristicName);
+    if (charIndex === -1) return;
+    
     const newValue = parseFloat(event.target.value) || 1;
     const updatedCharacteristics = [...orderedCharacteristics];
-    const currentCharacteristic = updatedCharacteristics[rowIndex];
-    updatedCharacteristics[rowIndex] = {
-      ...currentCharacteristic,
+    
+    updatedCharacteristics[charIndex] = {
+      ...updatedCharacteristics[charIndex],
       costWeight: getCostWeight(
-        currentCharacteristic.name,
+        updatedCharacteristics[charIndex].name,
         updatedCharacteristics.length,
-        rowIndex,
+        charIndex,
         selectedCharacteristics,
         newValue
       ),
       manualWeight: newValue,
     };
+    
     setOrderedCharacteristics(updatedCharacteristics);
   };
-  console.log(orderedCharacteristics);
-  console.log(rankItems);
+
   return (
     <Box sx={{ padding: 2 }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -335,27 +299,22 @@ export default function ProductTable() {
             <AvailabilityRow productsInfo={productsInfo} />
 
             <CharacteristicsHeader
-              displayCharacteristics={displayCharacteristics}
-              selectedCharacteristics={selectedCharacteristics}
-              onSelectAll={handleSelectAllClick}
               characteristicsExpanded={characteristicsExpanded}
-              toggleExpanded={() =>
-                setCharacteristicsExpanded(!characteristicsExpanded)
-              }
+              toggleExpanded={() => setCharacteristicsExpanded(!characteristicsExpanded)}
             />
 
-            {displayCharacteristics.map((characteristic, rowIndex) => (
+            {displayedCharacteristics.map((characteristic) => (
               <CharacteristicRow
                 key={characteristic.name}
                 characteristic={characteristic}
-                rowIndex={rowIndex}
                 firstColumnWidth={firstColumnWidth}
                 productColumnWidth={productColumnWidth}
-                draggedRow={draggedRow}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
+                isDragged={draggedItem === characteristic.name}
+                isDragOver={dragOverItem === characteristic.name}
+                onDragStart={() => handleDragStart(characteristic.name)}
+                onDragOver={(e) => handleDragOver(e, characteristic.name)}
                 onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
+                onDrop={() => handleDrop(characteristic.name)}
                 onDragEnd={handleDragEnd}
                 isSelected={isSelected(characteristic.name)}
                 onToggleSelect={handleToggleSelect}
@@ -364,7 +323,7 @@ export default function ProductTable() {
               />
             ))}
 
-            {displayCharacteristics.length === 0 && (
+            {displayedCharacteristics.length === 0 && (
               <StyledTableRow>
                 <StyledTableCell component="th" scope="row">
                   <strong>Общие характеристики</strong>
@@ -379,7 +338,7 @@ export default function ProductTable() {
               </StyledTableRow>
             )}
 
-            <AdditionalInfoRows productsInfo={productsInfo} />
+            <AdditionalInfoRows productsInfo={productsInfo} rankItems={rankItems} />
           </tbody>
         </Table>
       </TableContainer>

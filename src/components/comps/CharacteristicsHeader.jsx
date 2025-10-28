@@ -1,15 +1,11 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { StyledTableRow, StyledTableCell } from "./styledComponents";
 
 export default function CharacteristicsHeader({
-  displayCharacteristics,
-  selectedCharacteristics,
-  onSelectAll,
   characteristicsExpanded,
   toggleExpanded,
 }) {
@@ -26,18 +22,6 @@ export default function CharacteristicsHeader({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Checkbox
-            color="primary"
-            indeterminate={
-              selectedCharacteristics.length > 0 &&
-              selectedCharacteristics.length < displayCharacteristics.length
-            }
-            checked={
-              displayCharacteristics.length > 0 &&
-              selectedCharacteristics.length === displayCharacteristics.length
-            }
-            onChange={onSelectAll}
-          />
           <IconButton
             aria-label="expand characteristics"
             size="small"

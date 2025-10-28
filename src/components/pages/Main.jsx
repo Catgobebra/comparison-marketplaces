@@ -1,6 +1,5 @@
 /* global chrome */
 import React, { useState, useEffect } from "react";
-import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
@@ -15,7 +14,6 @@ import useProducts from "../../hooks/useProducts";
 import { isValidOzonUrl, parseSku } from "../../utils/ozon";
 
 import styles from "./Main.module.sass";
-import { alignItems, display, flexDirection, height, style } from "@mui/system";
 
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 

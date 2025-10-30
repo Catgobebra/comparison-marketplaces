@@ -1,45 +1,71 @@
 import React from "react";
 import TextField from "@mui/material/TextField";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import Checkbox from "@mui/material/Checkbox";
+import { useDrag, useDrop } from 'react-dnd';
+import { ItemTypes } from './ItemTypes';
 import { DraggableTableRow, StyledTableCell } from "./styledComponents";
 
-export default function CharacteristicRow({
+const CharacteristicRow = React.memo(function CharacteristicRow({
   characteristic,
-  rowIndex,
   firstColumnWidth,
   productColumnWidth,
-  draggedRow,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onDragEnd,
+  findCharacteristic,
+  moveCharacteristic,
   isSelected,
   onToggleSelect,
   onWeightChange,
   characteristicsExpanded,
 }) {
-  const labelId = `enhanced-table-checkbox-${rowIndex}`;
-  const isDraggable = characteristic.isBestFlags.some(x => x);
+  const originalIndex = findCharacteristic(characteristic.name).index;
+  
+  const [{ isDragging }, drag] = useDrag(
+    () => ({
+      type: ItemTypes.CHARACTERISTIC,
+      item: { id: characteristic.name, originalIndex },
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+      end: (item, monitor) => {
+        const { id: droppedId, originalIndex } = item;
+        const didDrop = monitor.didDrop();
+        if (!didDrop) {
+          moveCharacteristic(droppedId, originalIndex);
+        }
+      },
+    }),
+    [characteristic.name, originalIndex, moveCharacteristic],
+  );
+
+  const [, drop] = useDrop(
+    () => ({
+      accept: ItemTypes.CHARACTERISTIC,
+      hover({ id: draggedId }) {
+        if (draggedId !== characteristic.name) {
+          const { index: overIndex } = findCharacteristic(characteristic.name);
+          moveCharacteristic(draggedId, overIndex);
+        }
+      },
+    }),
+    [findCharacteristic, moveCharacteristic],
+  );
+
+  const isCanDraggable = characteristic.isBestFlags.some(x => x);
+  const isDraggable = isCanDraggable && isSelected;
+  const opacity = isDragging ? 0 : 1;
+  
+  const labelId = `enhanced-table-checkbox-${characteristic.name}`;
   
   return (
     <DraggableTableRow
-      key={characteristic.name}
-      isdragging={(draggedRow === rowIndex).toString()}
-      draggable={isDraggable}
-      onDragStart={isDraggable ? (e) => onDragStart(e, rowIndex) : undefined}
-      onDragOver={isDraggable ? (e) => onDragOver(e, rowIndex) : undefined}
-      onDragLeave={isDraggable ? onDragLeave : undefined}
-      onDrop={isDraggable ? (e) => onDrop(e, rowIndex) : undefined}
-      onDragEnd={isDraggable ? onDragEnd : undefined}
+      ref={isDraggable ? (node) => drag(drop(node)) : undefined}
+      isdragging={isDragging.toString()}
       style={{
+        opacity,
         maxHeight: characteristicsExpanded ? "1000px" : "0",
-        opacity: characteristicsExpanded ? 1 : 0,
         overflow: "hidden",
         transition: "all 0.3s ease-in-out",
         display: characteristicsExpanded ? "table-row" : "none",
-        cursor: isDraggable ? "grab" : "default", 
+        cursor: isDraggable ? "move" : "default",
       }}
     >
       <StyledTableCell
@@ -48,34 +74,26 @@ export default function CharacteristicRow({
         sx={{ width: firstColumnWidth, position: "relative" }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          {isDraggable ? (
+          {isCanDraggable ? (
             <>
               <Checkbox
                 color="primary"
                 checked={isSelected}
+                onChange={(event) => onToggleSelect(event, characteristic.name)}
                 inputProps={{ "aria-labelledby": labelId }}
-                onClick={(event) => onToggleSelect(event, characteristic.name)}
               />
               <TextField
-                id={`weight-${rowIndex}`}
+                id={`weight-${characteristic.name}`}
                 label="Вес"
                 value={characteristic.manualWeight || 1}
                 variant="standard"
-                style={{ width: 50 }}
-                onChange={(event) => onWeightChange(event, rowIndex)}
+                style={{ width: 50, marginRight: 8 }}
+                onChange={(event) => onWeightChange(event, characteristic.name)}
                 inputProps={{ min: "0.1", max: "10", step: "0.1" }}
-              />
-              <DragIndicatorIcon
-                sx={{
-                  cursor: "grab",
-                  color: "action.active",
-                  "&:hover": { color: "primary.main" },
-                  marginRight: 8,
-                }}
               />
             </>
           ) : (
-            <div style={{ marginLeft: "72px" }}></div> 
+            <div style={{ marginLeft: "72px" }}></div>
           )}
           {characteristic.name}
         </div>
@@ -100,4 +118,6 @@ export default function CharacteristicRow({
       ))}
     </DraggableTableRow>
   );
-}
+});
+
+export default CharacteristicRow;

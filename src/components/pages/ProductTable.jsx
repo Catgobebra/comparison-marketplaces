@@ -4,9 +4,10 @@ import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../../redux-state/reducers/products";
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import TableHeader from "../comps/TableHeader";
 import ImagesRow from "../comps/ImagesRow";
@@ -20,17 +21,16 @@ import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 
-export default function ProductTable() {
+function ProductTableContent() {
   const dispatch = useDispatch();
   const productsInfo = useSelector((state) => state.products.products);
 
   const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
-  const [draggedItem, setDraggedItem] = React.useState(null);
-  const [dragOverItem, setDragOverItem] = React.useState(null);
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
-
+  console.log(orderedCharacteristics)
+  console.log(selectedCharacteristics)
   React.useEffect(() => {
     chrome.storage.local.get(["myStoredArray"]).then((result) => {
       if (result.myStoredArray && result.myStoredArray.length > 0)
@@ -131,9 +131,52 @@ export default function ProductTable() {
               )
             : 0,
       }));
-      setOrderedCharacteristics(characteristicsWithWeights);
+      setOrderedCharacteristics(
+        [
+    ...characteristicsWithWeights.filter(item => item.isBestFlags.some(x => x)),
+    ...characteristicsWithWeights.filter(item => !item.isBestFlags.some(x => x))
+      ]);
     }
   }, [commonCharacteristics, orderedCharacteristics.length, selectedCharacteristics]);
+
+  const findCharacteristic = React.useCallback(
+    (id) => {
+      const characteristic = orderedCharacteristics.find((c) => c.name === id);
+      return {
+        characteristic,
+        index: orderedCharacteristics.indexOf(characteristic),
+      };
+    },
+    [orderedCharacteristics]
+  );
+
+  const moveCharacteristic = React.useCallback(
+    (id, atIndex) => {
+      const { characteristic, index } = findCharacteristic(id);
+      if (!characteristic) return;
+
+      const newOrderedCharacteristics = [...orderedCharacteristics];
+      newOrderedCharacteristics.splice(index, 1);
+      newOrderedCharacteristics.splice(atIndex, 0, characteristic);
+
+      const updatedCharacteristics = newOrderedCharacteristics.map((char, idx) => ({
+        ...char,
+        costWeight:
+          char.costWeight > 0
+            ? getCostWeight(
+                char.name,
+                newOrderedCharacteristics.length,
+                idx,
+                selectedCharacteristics,
+                char.manualWeight
+              )
+            : 0,
+      }));
+
+      setOrderedCharacteristics(updatedCharacteristics);
+    },
+    [findCharacteristic, orderedCharacteristics, selectedCharacteristics]
+  );
 
   const updateCharacteristicsOrder = (newSelected) => {
     const selectedChars = orderedCharacteristics.filter(char => 
@@ -176,64 +219,6 @@ export default function ProductTable() {
 
   const firstColumnWidth = "30%";
   const productColumnWidth = `${70 / productsInfo.length}%`;
-  
-  const displayedCharacteristics = [
-    ...orderedCharacteristics.filter(item => item.isBestFlags.some(x => x)),
-    ...orderedCharacteristics.filter(item => !item.isBestFlags.some(x => x))
-  ];
-
-  const handleDragStart = (characteristicName) => {
-    setDraggedItem(characteristicName);
-  };
-
-  const handleDragOver = (e, characteristicName) => {
-    e.preventDefault();
-    if (draggedItem && draggedItem !== characteristicName) {
-      setDragOverItem(characteristicName);
-    }
-  };
-
-  const handleDragLeave = () => {
-    setDragOverItem(null);
-  };
-
-  const handleDrop = (targetCharacteristicName) => {
-    if (!draggedItem || draggedItem === targetCharacteristicName) {
-      return;
-    }
-
-    const newOrder = [...orderedCharacteristics];
-    const draggedIndex = newOrder.findIndex(char => char.name === draggedItem);
-    const targetIndex = newOrder.findIndex(char => char.name === targetCharacteristicName);
-
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    const [movedItem] = newOrder.splice(draggedIndex, 1);
-    newOrder.splice(targetIndex, 0, movedItem);
-
-    const updatedOrder = newOrder.map((char, index) => ({
-      ...char,
-      costWeight:
-        char.costWeight > 0
-          ? getCostWeight(
-              char.name,
-              newOrder.length,
-              index,
-              selectedCharacteristics,
-              char.manualWeight
-            )
-          : 0,
-    }));
-
-    setOrderedCharacteristics(updatedOrder);
-    setDraggedItem(null);
-    setDragOverItem(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedItem(null);
-    setDragOverItem(null);
-  };
 
   const handleToggleSelect = (event, name) => {
     const selectedIndex = selectedCharacteristics.indexOf(name);
@@ -275,13 +260,6 @@ export default function ProductTable() {
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Сравнение товаров
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        💡 Перетаскивайте строки общих характеристик для изменения порядка
-      </Typography>
-
       <TableContainer component={Paper}>
         <Table
           sx={{ minWidth: 700, tableLayout: "fixed", width: "100%" }}
@@ -303,19 +281,14 @@ export default function ProductTable() {
               toggleExpanded={() => setCharacteristicsExpanded(!characteristicsExpanded)}
             />
 
-            {displayedCharacteristics.map((characteristic) => (
+            {orderedCharacteristics.map((characteristic) => (
               <CharacteristicRow
                 key={characteristic.name}
                 characteristic={characteristic}
                 firstColumnWidth={firstColumnWidth}
                 productColumnWidth={productColumnWidth}
-                isDragged={draggedItem === characteristic.name}
-                isDragOver={dragOverItem === characteristic.name}
-                onDragStart={() => handleDragStart(characteristic.name)}
-                onDragOver={(e) => handleDragOver(e, characteristic.name)}
-                onDragLeave={handleDragLeave}
-                onDrop={() => handleDrop(characteristic.name)}
-                onDragEnd={handleDragEnd}
+                findCharacteristic={findCharacteristic}
+                moveCharacteristic={moveCharacteristic}
                 isSelected={isSelected(characteristic.name)}
                 onToggleSelect={handleToggleSelect}
                 onWeightChange={handleWeightChange}
@@ -323,7 +296,7 @@ export default function ProductTable() {
               />
             ))}
 
-            {displayedCharacteristics.length === 0 && (
+            {orderedCharacteristics.length === 0 && (
               <StyledTableRow>
                 <StyledTableCell component="th" scope="row">
                   <strong>Общие характеристики</strong>
@@ -343,5 +316,13 @@ export default function ProductTable() {
         </Table>
       </TableContainer>
     </Box>
+  );
+}
+
+export default function ProductTable() {
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <ProductTableContent />
+    </DndProvider>
   );
 }

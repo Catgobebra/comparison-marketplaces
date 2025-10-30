@@ -12,7 +12,7 @@ export const getCostWeight = (
   selectedChars,
   manualWeight = 1
 ) =>
-  (10 + (len_ - position)) *
+  (1 + (len_ - position)) *
   manualWeight *
   (selectedChars.includes(name) ? 10 : 1);
 

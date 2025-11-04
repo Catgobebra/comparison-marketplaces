@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../redux-state/reducers/products";
 import * as api from "../api/products";
-import { parseSku } from "../utils/ozon";
 
 export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
   const dispatch = useDispatch();
@@ -88,17 +87,17 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
   );
 
   /**
-   * addBySku - запрашивает данные по sku и добавляет товар в список
-   * @param {string} sku
+   * addByUrl - запрашивает данные по url и добавляет товар в список
+   * @param {string} url
    */
-  const addBySku = useCallback(
-    async (sku) => {
-      if (!sku) {
-        setSnackbar({ open: true, severity: "error", message: "SKU пустой" });
-        throw new Error("SKU empty");
+  const addByUrl = useCallback(
+    async (url) => {
+      if (!url) {
+        setSnackbar({ open: true, severity: "error", message: "url пустой" });
+        throw new Error("url empty");
       }
 
-      if (products.some((p) => String(p.article) === String(sku))) {
+      if (products.some((p) => String(p.productUrl) === String(url))) {
         setSnackbar({
           open: true,
           severity: "info",
@@ -115,7 +114,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
 
       try {
         const fetchFn = async () => {
-          return await api.getProductBySku(sku);
+          return await api.getProductByUrl(url);
         };
 
         const info = await withRetry(fetchFn);
@@ -137,7 +136,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
         return info;
       } catch (e) {
         if (e.name === "AbortError") {
-          console.warn("addBySku aborted");
+          console.warn("addByUrl aborted");
           setSnackbar({
             open: true,
             severity: "info",
@@ -145,7 +144,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
           });
           throw e;
         }
-        console.error("addBySku error", e);
+        console.error("addByUrl error", e);
         setSnackbar({
           open: true,
           severity: "warning",
@@ -237,7 +236,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
     loading,
     snackbar,
     setSnackbarState,
-    addBySku,
+    addByUrl,
     remove,
     doCompare,
   };

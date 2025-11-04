@@ -11,7 +11,7 @@ import SnackbarAlert from "../comps/SnackbarAlert";
 import CategoriesList from "../comps/CategoriesList";
 
 import useProducts from "../../hooks/useProducts";
-import { isValidOzonUrl, parseSku } from "../../utils/ozon";
+import { MarketplaceParser } from "../../utils/parseMarketplace";
 
 import styles from "./Main.module.sass";
 
@@ -23,7 +23,7 @@ function Main() {
     loading,
     snackbar,
     setSnackbarState,
-    addBySku,
+    addByUrl,
     remove,
     doCompare,
   } = useProducts();
@@ -38,9 +38,9 @@ function Main() {
           const url = tabs[0]?.url;
           if (!url) return;
           setCurrentUrl(url);
-          const isProduct = isValidOzonUrl(url);
+          const isProduct = MarketplaceParser.isValidUrl(url);
           setShowFab(
-            isProduct && !products.some((p) => p.article === parseSku(url))
+            isProduct && !products.some((p) => p.article === MarketplaceParser.parseSku(url))
           );
         });
       }
@@ -52,7 +52,7 @@ function Main() {
   const handleInputChange = (e) => setCurrentLink(e.target.value);
 
   const handleAdd = async (link) => {
-    const sku = parseSku(link);
+    const sku = MarketplaceParser.parseSku(link);
     if (!sku) {
       setSnackbarState({
         open: true,
@@ -62,7 +62,7 @@ function Main() {
       return;
     }
     try {
-      await addBySku(sku);
+      await addByUrl(link);
     } catch (e) {}
     setCurrentLink("");
   };

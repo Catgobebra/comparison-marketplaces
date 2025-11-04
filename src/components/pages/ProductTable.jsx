@@ -31,6 +31,7 @@ function ProductTableContent() {
   const [rankItems, setRankItems] = React.useState([]);
   console.log(orderedCharacteristics)
   console.log(selectedCharacteristics)
+  console.log(productsInfo)
   React.useEffect(() => {
     chrome.storage.local.get(["myStoredArray"]).then((result) => {
       if (result.myStoredArray && result.myStoredArray.length > 0)

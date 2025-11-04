@@ -19,7 +19,7 @@ export default function ProductListItem({ product, onDelete }) {
       ? product.productName.slice(0, 30) + "..."
       : product.productName
     : "Неизвестный товар";
-  const cost = product?.originalPrice ?? "Неизвестно";
+  const cost = product?.currentPrice ?? "Неизвестно";
   const rating = product?.averageRating ?? 0;
   const ratingStat = product?.reviewsCount ?? 0;
   const srcImageItem = product?.imageUrl ?? "";

@@ -11,10 +11,15 @@ export const getCostWeight = (
   position,
   selectedChars,
   manualWeight = 1
-) =>
-  (1 + (len_ - position)) *
-  manualWeight *
-  (selectedChars.includes(name) ? 10 : 1);
+  ) =>
+
+  {
+    const isSelect = selectedChars.includes(name);
+    const baseWeight = isSelect ? Math.ceil((len_ - position) / len_ * 10) : 1;
+    const selectionMultiplier = isSelect ? 2 : 1;
+    const rawWeight = baseWeight * manualWeight * selectionMultiplier;
+    return Math.min(20, Math.max(0, Math.ceil(rawWeight)));
+  };
 
 export const getPriceInfo = (product) => {
   const prices = [

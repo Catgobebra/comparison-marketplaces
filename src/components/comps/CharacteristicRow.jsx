@@ -82,15 +82,18 @@ const CharacteristicRow = React.memo(function CharacteristicRow({
                 onChange={(event) => onToggleSelect(event, characteristic.name)}
                 inputProps={{ "aria-labelledby": labelId }}
               />
-              <TextField
-                id={`weight-${characteristic.name}`}
-                label="Вес"
-                value={characteristic.manualWeight || 1}
-                variant="standard"
-                style={{ width: 50, marginRight: 8 }}
-                onChange={(event) => onWeightChange(event, characteristic.name)}
-                inputProps={{ min: "0.1", max: "10", step: "0.1" }}
-              />
+              <input 
+              id={`weight-${characteristic.name}`} 
+              type="number" 
+              value={characteristic.manualWeight ?? 1} 
+              onChange={(event) => onWeightChange(event, characteristic.name)}
+              max="1" 
+              min="0" 
+              placeholder="Вес"
+              step="0.1"
+              style={{ width: 50, marginRight: 8 }}
+             />
+
             </>
           ) : (
             <div style={{ marginLeft: "72px" }}></div>

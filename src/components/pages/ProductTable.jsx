@@ -43,6 +43,7 @@ function ProductTableContent() {
     if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
       return;
     const rank = new Array(productsInfo.length).fill(0);
+
     orderedCharacteristics.forEach((characteristic) => {
       if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
         characteristic.isBestFlags.forEach((isBest, productIndex) => {
@@ -51,6 +52,9 @@ function ProductTableContent() {
         });
       }
     });
+    const total = rank.reduce((sum, value) => sum + value, 0);
+    if (total > 0)
+      rank.forEach(value => (value / total) * 100)
     setRankItems(rank);
   }, [orderedCharacteristics, productsInfo]);
 
@@ -241,7 +245,13 @@ function ProductTableContent() {
     const charIndex = orderedCharacteristics.findIndex(char => char.name === characteristicName);
     if (charIndex === -1) return;
     
-    const newValue = parseFloat(event.target.value) || 1;
+    let newValue = parseFloat(event.target.value);
+     if (isNaN(newValue))
+        newValue = 0;
+    
+    if (newValue > 1) newValue = 1;
+    if (newValue < 0) newValue = 0;
+
     const updatedCharacteristics = [...orderedCharacteristics];
     
     updatedCharacteristics[charIndex] = {

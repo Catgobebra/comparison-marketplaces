@@ -4,6 +4,7 @@ import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
+import Skeleton from "@mui/material/Skeleton";
 import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../../redux-state/reducers/products";
 import { DndProvider } from 'react-dnd';
@@ -40,38 +41,7 @@ const { doCompare, loading: productsLoading } = useProducts();
   console.log(orderedCharacteristics)
   console.log(selectedCharacteristics)
   console.log(productsInfo)
-
-  React.useEffect(() => {
-    setLocalLoading(true);
-    chrome.storage.local.get(["myStoredArray", "hasCompared"]).then((result) => {
-      if (result.myStoredArray && result.myStoredArray.length > 0) {
-        dispatch(changeProducts(result.myStoredArray));
-        // Восстанавливаем флаг сравнения из хранилища
-        setHasCompared(result.hasCompared || false);
-      }
-      setLocalLoading(false);
-    }).catch(() => {
-      setLocalLoading(false);
-    });
-  }, [dispatch]);
-
-  React.useEffect(() => {
-    if (productsInfo.length > 0 && !hasCompared && !isLoading) {
-      console.log("Starting comparison for", productsInfo.length, "products");
-      setLocalLoading(true);
-      doCompare().then(() => {
-        console.log("Comparison completed");
-        setHasCompared(true);
-        // Сохраняем флаг в хранилище
-        chrome.storage.local.set({ hasCompared: true });
-        setLocalLoading(false);
-      }).catch(error => {
-        console.error("doCompare failed:", error);
-        setHasCompared(true);
-        setLocalLoading(false);
-      });
-    }
-  }, [productsInfo.length, hasCompared, doCompare, isLoading]);
+  
 
   React.useEffect(() => {
     setLocalLoading(true);
@@ -336,7 +306,8 @@ const { doCompare, loading: productsLoading } = useProducts();
   return (
     <>
     <Box sx={{ padding: 2 }}>
-      <TableContainer component={Paper}>
+      {!isLoading ?
+      (<TableContainer component={Paper}>
         <Table
           sx={{ minWidth: 700, tableLayout: "fixed", width: "100%" }}
           aria-label="comparison table"
@@ -391,8 +362,8 @@ const { doCompare, loading: productsLoading } = useProducts();
           </tbody>
         </Table>
       </TableContainer>
+      ) : <Skeleton variant="rectangular" />}
     </Box>
-    <LoadingBackdrop open={isLoading} />
     </>
   );
 }

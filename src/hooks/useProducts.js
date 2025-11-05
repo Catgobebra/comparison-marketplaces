@@ -206,7 +206,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
         severity: "success",
         message: "Сравнение выполнено",
       });
-
+      console.log(result)
       return result;
     } catch (e) {
       if (e.name === "AbortError") {

@@ -19,25 +19,89 @@ import CharacteristicRow from "../comps/CharacteristicRow";
 import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 
 import { getCostWeight } from "../../utils/tableLogic";
+import useProducts from "../../hooks/useProducts";
+import LoadingBackdrop from "../comps/LoadingBackdrop";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 
 function ProductTableContent() {
   const dispatch = useDispatch();
   const productsInfo = useSelector((state) => state.products.products);
+const { doCompare, loading: productsLoading } = useProducts();
+  const [hasCompared, setHasCompared] = React.useState(false);
+  const [localLoading, setLocalLoading] = React.useState(false);
 
   const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
+
+  const isLoading = localLoading || productsLoading;
+
   console.log(orderedCharacteristics)
   console.log(selectedCharacteristics)
   console.log(productsInfo)
+
   React.useEffect(() => {
-    chrome.storage.local.get(["myStoredArray"]).then((result) => {
-      if (result.myStoredArray && result.myStoredArray.length > 0)
+    setLocalLoading(true);
+    chrome.storage.local.get(["myStoredArray", "hasCompared"]).then((result) => {
+      if (result.myStoredArray && result.myStoredArray.length > 0) {
         dispatch(changeProducts(result.myStoredArray));
+        // Восстанавливаем флаг сравнения из хранилища
+        setHasCompared(result.hasCompared || false);
+      }
+      setLocalLoading(false);
+    }).catch(() => {
+      setLocalLoading(false);
     });
   }, [dispatch]);
+
+  React.useEffect(() => {
+    if (productsInfo.length > 0 && !hasCompared && !isLoading) {
+      console.log("Starting comparison for", productsInfo.length, "products");
+      setLocalLoading(true);
+      doCompare().then(() => {
+        console.log("Comparison completed");
+        setHasCompared(true);
+        // Сохраняем флаг в хранилище
+        chrome.storage.local.set({ hasCompared: true });
+        setLocalLoading(false);
+      }).catch(error => {
+        console.error("doCompare failed:", error);
+        setHasCompared(true);
+        setLocalLoading(false);
+      });
+    }
+  }, [productsInfo.length, hasCompared, doCompare, isLoading]);
+
+  React.useEffect(() => {
+    setLocalLoading(true);
+    chrome.storage.local.get(["myStoredArray"]).then((result) => {
+      if (result.myStoredArray && result.myStoredArray.length > 0)
+      {
+        dispatch(changeProducts(result.myStoredArray));
+        setHasCompared(false);
+      }
+      setLocalLoading(false);
+    }).catch(() => {
+      setLocalLoading(false);
+    });
+  }, [dispatch]);
+
+  React.useEffect(() => {
+    if (productsInfo.length > 0 && !hasCompared && !isLoading) {
+      console.log("Starting comparison for", productsInfo.length, "products");
+      setLocalLoading(true);
+      doCompare().then(() => {
+        console.log("Comparison completed");
+        setHasCompared(true);
+        setLocalLoading(false);
+      }).catch(error => {
+        console.error("doCompare failed:", error);
+        setHasCompared(true);
+        setLocalLoading(false);
+      });
+    }
+  }, [productsInfo.length, hasCompared, doCompare, isLoading]);
 
   React.useEffect(() => {
     if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
@@ -270,6 +334,7 @@ function ProductTableContent() {
   };
 
   return (
+    <>
     <Box sx={{ padding: 2 }}>
       <TableContainer component={Paper}>
         <Table
@@ -327,6 +392,8 @@ function ProductTableContent() {
         </Table>
       </TableContainer>
     </Box>
+    <LoadingBackdrop open={isLoading} />
+    </>
   );
 }
 

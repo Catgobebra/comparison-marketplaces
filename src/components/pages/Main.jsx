@@ -73,9 +73,6 @@ function Main() {
 
   const handleOpenCompare = async () => {
     try {
-      await doCompare();
-    } catch (e) {}
-    try {
       if (typeof chrome !== "undefined" && chrome.tabs?.create) {
         chrome.tabs.create({
           url: chrome.runtime.getURL("index.html#/comparison"),

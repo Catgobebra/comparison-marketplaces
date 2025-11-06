@@ -4,9 +4,8 @@ import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
-import Skeleton from "@mui/material/Skeleton";
 import { useDispatch, useSelector } from "react-redux";
-import { changeProducts } from "../../redux-state/reducers/products";
+import { changeCompareProducts } from "../../redux-state/reducers/compareProduct";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -20,58 +19,30 @@ import CharacteristicRow from "../comps/CharacteristicRow";
 import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 
 import { getCostWeight } from "../../utils/tableLogic";
-import useProducts from "../../hooks/useProducts";
-import LoadingBackdrop from "../comps/LoadingBackdrop";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 
 function ProductTableContent() {
   const dispatch = useDispatch();
-  const productsInfo = useSelector((state) => state.products.products);
-const { doCompare, loading: productsLoading } = useProducts();
-  const [hasCompared, setHasCompared] = React.useState(false);
-  const [localLoading, setLocalLoading] = React.useState(false);
+  const productsInfo = useSelector((state) => state.compareProducts.compare_products); 
+  const originalProducts = useSelector((state) => state.products.products);
 
   const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
-
-  const isLoading = localLoading || productsLoading;
-
   console.log(orderedCharacteristics)
   console.log(selectedCharacteristics)
   console.log(productsInfo)
-  
 
   React.useEffect(() => {
-    setLocalLoading(true);
-    chrome.storage.local.get(["myStoredArray"]).then((result) => {
-      if (result.myStoredArray && result.myStoredArray.length > 0)
-      {
-        dispatch(changeProducts(result.myStoredArray));
-        setHasCompared(false);
+    chrome.storage.local.get(["myStoredCompareArray"]).then((result) => {
+      if (result.myStoredCompareArray && result.myStoredCompareArray.length > 0) {
+        dispatch(changeCompareProducts(result.myStoredCompareArray));
+      } else if (originalProducts && originalProducts.length > 0) {
+        console.log("Нет результатов сравнения. Выполните сравнение товаров.");
       }
-      setLocalLoading(false);
-    }).catch(() => {
-      setLocalLoading(false);
     });
-  }, [dispatch]);
-
-  React.useEffect(() => {
-    if (productsInfo.length > 0 && !hasCompared && !isLoading) {
-      console.log("Starting comparison for", productsInfo.length, "products");
-      setLocalLoading(true);
-      doCompare().then(() => {
-        console.log("Comparison completed");
-        setHasCompared(true);
-        setLocalLoading(false);
-      }).catch(error => {
-        console.error("doCompare failed:", error);
-        setHasCompared(true);
-        setLocalLoading(false);
-      });
-    }
-  }, [productsInfo.length, hasCompared, doCompare, isLoading]);
+  }, [dispatch, originalProducts]);
 
   React.useEffect(() => {
     if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
@@ -304,10 +275,8 @@ const { doCompare, loading: productsLoading } = useProducts();
   };
 
   return (
-    <>
     <Box sx={{ padding: 2 }}>
-      {!isLoading ?
-      (<TableContainer component={Paper}>
+      <TableContainer component={Paper}>
         <Table
           sx={{ minWidth: 700, tableLayout: "fixed", width: "100%" }}
           aria-label="comparison table"
@@ -362,9 +331,7 @@ const { doCompare, loading: productsLoading } = useProducts();
           </tbody>
         </Table>
       </TableContainer>
-      ) : <Skeleton variant="rectangular" />}
     </Box>
-    </>
   );
 }
 

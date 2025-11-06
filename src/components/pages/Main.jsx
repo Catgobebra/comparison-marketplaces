@@ -26,6 +26,7 @@ function Main() {
     addByUrl,
     remove,
     doCompare,
+    loadCompareProducts
   } = useProducts();
   const [currentLink, setCurrentLink] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
@@ -72,6 +73,9 @@ function Main() {
   const handleDelete = (product) => remove(product);
 
   const handleOpenCompare = async () => {
+    try {
+      await doCompare();
+    } catch (e) {}
     try {
       if (typeof chrome !== "undefined" && chrome.tabs?.create) {
         chrome.tabs.create({

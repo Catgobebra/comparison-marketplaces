@@ -2,13 +2,13 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../redux-state/reducers/products";
+import { changeCompareProducts } from "../redux-state/reducers/compareProduct";
 import * as api from "../api/products";
 
 export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
   const dispatch = useDispatch();
-  const products = useSelector(
-    (s) => (s.products && s.products.products) || []
-  );
+  const products = useSelector((s) => (s.products && s.products.products) || []);
+  const compareProducts = useSelector((s) => (s.compareProducts && s.compareProducts.compare_products) || []);
 
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -197,16 +197,26 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
 
       const result = await withRetry(fetchFn);
 
-      const newProducts = Array.isArray(result.result) ? result.result : [];
-      dispatch(changeProducts(newProducts));
-      persist(newProducts);
+      const newCompareProducts = Array.isArray(result.result) ? result.result : [];
+      dispatch(changeCompareProducts(newCompareProducts));
+      
+      try {
+        if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
+          await chrome.storage.local.set({ 
+            myStoredArray: products,
+            myStoredCompareArray: newCompareProducts
+          });
+        }
+      } catch (e) {
+        console.error("chrome.storage.set failed", e);
+      }
 
       setSnackbar({
         open: true,
         severity: "success",
         message: "Сравнение выполнено",
       });
-      console.log(result)
+
       return result;
     } catch (e) {
       if (e.name === "AbortError") {
@@ -231,13 +241,33 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
     }
   }, [dispatch, persist, products, withRetry]);
 
+    const loadCompareProducts = useCallback(() => {
+    try {
+      if (typeof chrome !== "undefined" && chrome.storage?.local?.get) {
+        chrome.storage.local
+          .get(["myStoredCompareArray"])
+          .then((result) => {
+            if (result?.myStoredCompareArray?.length) {
+              dispatch(changeCompareProducts(result.myStoredCompareArray));
+            }
+          })
+          .catch(console.error);
+      }
+    } catch (e) {
+      console.error("chrome.storage unavailable", e);
+    }
+  }, [dispatch]);
+
+
   return {
     products,
+    compareProducts,
     loading,
     snackbar,
     setSnackbarState,
     addByUrl,
     remove,
     doCompare,
+    loadCompareProducts,
   };
 }

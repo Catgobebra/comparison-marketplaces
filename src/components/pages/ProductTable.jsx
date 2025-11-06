@@ -45,22 +45,30 @@ function ProductTableContent() {
   }, [dispatch, originalProducts]);
 
   React.useEffect(() => {
-    if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
-      return;
-    const rank = new Array(productsInfo.length).fill(0);
+  if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
+    return;
+  
+  const rank = new Array(productsInfo.length).fill(0);
 
-    orderedCharacteristics.forEach((characteristic) => {
-      if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
-        characteristic.isBestFlags.forEach((isBest, productIndex) => {
-          if (isBest && productIndex < rank.length)
-            rank[productIndex] += characteristic.costWeight;
-        });
-      }
-    });
-    const total = rank.reduce((sum, value) => sum + value, 0);
-    if (total > 0)
-      rank.forEach(value => (value / total) * 100)
-    setRankItems(rank);
+  orderedCharacteristics.forEach((characteristic) => {
+    if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
+      characteristic.isBestFlags.forEach((isBest, productIndex) => {
+        if (isBest && productIndex < rank.length)
+          rank[productIndex] += characteristic.costWeight;
+      });
+    }
+  });
+
+  const total = rank.reduce((sum, value) => sum + value, 0);
+  
+  let normalizedRank;
+    if (total > 0) {
+      normalizedRank = rank.map(value => Math.round((value / total) * 100));
+    } else {
+      normalizedRank = rank.map(() => 100 / rank.length);
+    }
+  
+    setRankItems(normalizedRank);
   }, [orderedCharacteristics, productsInfo]);
 
   const getProductCharacteristics = (product) => {

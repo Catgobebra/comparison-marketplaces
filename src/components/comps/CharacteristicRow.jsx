@@ -1,6 +1,8 @@
 import React from "react";
 import TextField from "@mui/material/TextField";
 import Checkbox from "@mui/material/Checkbox";
+import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import { useDrag, useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
 import { DraggableTableRow, StyledTableCell } from "./styledComponents";
@@ -93,12 +95,18 @@ const CharacteristicRow = React.memo(function CharacteristicRow({
               step="0.1"
               style={{ width: 50, marginRight: 8 }}
              />
-
             </>
           ) : (
             <div style={{ marginLeft: "72px" }}></div>
           )}
-          {characteristic.name}
+          <Typography>{characteristic.name}</Typography>
+          {isCanDraggable && (
+          <Typography sx={{ margin: '0 5px', color: "rgb(30 133 28)" }}>
+            +<Typography component="span" sx={{ fontStyle: 'italic' }}>
+              {characteristic.costWeight}
+            </Typography>
+          </Typography>
+          )}
         </div>
       </StyledTableCell>
       {characteristic.values.map((value, index) => (

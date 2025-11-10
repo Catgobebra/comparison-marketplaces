@@ -18,6 +18,10 @@ import CharacteristicsHeader from "../comps/CharacteristicsHeader";
 import CharacteristicRow from "../comps/CharacteristicRow";
 import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 
+import useProducts from "../../hooks/useProducts";
+
+import LoadingProgressBar from "../comps/LoadingProgressBar";
+
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 
@@ -26,10 +30,13 @@ function ProductTableContent() {
   const productsInfo = useSelector((state) => state.compareProducts.compare_products); 
   const originalProducts = useSelector((state) => state.products.products);
 
+  const { doCompare, loading } = useProducts();
+
   const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
+
   console.log(orderedCharacteristics)
   console.log(selectedCharacteristics)
   console.log(productsInfo)
@@ -43,6 +50,26 @@ function ProductTableContent() {
       }
     });
   }, [dispatch, originalProducts]);
+
+  React.useEffect(() => {
+    const performComparison = async () => {
+      if (productsInfo && productsInfo.length > 0) {
+        console.log(productsInfo)
+        return;
+      }
+
+      if (originalProducts && originalProducts.length > 0) {
+        try {
+          await doCompare();
+        } catch (error) {
+          console.error("Comparison failed:", error);
+        }
+      }
+    };
+
+    performComparison();
+  }, [doCompare, originalProducts,productsInfo]);
+
 
   React.useEffect(() => {
   if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
@@ -283,6 +310,7 @@ function ProductTableContent() {
   };
 
   return (
+    <>
     <Box sx={{ padding: 2 }}>
       <TableContainer component={Paper}>
         <Table
@@ -340,6 +368,8 @@ function ProductTableContent() {
         </Table>
       </TableContainer>
     </Box>
+    <LoadingProgressBar open={loading} />
+    </>
   );
 }
 

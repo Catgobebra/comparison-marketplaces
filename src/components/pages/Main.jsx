@@ -73,9 +73,9 @@ function Main() {
   const handleDelete = (product) => remove(product);
 
   const handleOpenCompare = async () => {
-    try {
+    /* try {
       await doCompare();
-    } catch (e) {}
+    } catch (e) {} */
     try {
       if (typeof chrome !== "undefined" && chrome.tabs?.create) {
         chrome.tabs.create({

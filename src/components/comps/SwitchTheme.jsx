@@ -1,8 +1,8 @@
 import React from "react";
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import { styled } from '@mui/material/styles';
-import Switch, { SwitchProps } from '@mui/material/Switch';
+import { styled, useColorScheme } from '@mui/material/styles';
+import Switch from '@mui/material/Switch';
 
 const MaterialUISwitch = styled(Switch)(({ theme }) => ({
   width: 62,
@@ -60,12 +60,67 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
+export function storageManager(params) {
+  const { key } = params;
+  
+  return {
+    get: (defaultValue) => {
+      try {
+        const value = localStorage.getItem(key);
+        if (value) {
+          return JSON.parse(value);
+        }
+      } catch (error) {
+        console.error('Error reading from localStorage:', error);
+      }
+      return defaultValue;
+    },
+    set: (value) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (error) {
+        console.error('Error writing to localStorage:', error);
+      }
+    },
+    subscribe: (handler) => {
+      const listener = (event) => {
+        if (event.key === key) {
+          try {
+            const newValue = event.newValue ? JSON.parse(event.newValue) : null;
+            handler(newValue);
+          } catch (error) {
+            console.error('Error parsing storage value:', error);
+          }
+        }
+      };
+      
+      window.addEventListener('storage', listener);
+      
+      return () => {
+        window.removeEventListener('storage', listener);
+      };
+    },
+  };
+}
 
 export default function SwitchTheme() {
+  const { mode, setMode } = useColorScheme();
+  
+  const handleSwitch = (event) => {
+    const newMode = mode === 'light' ? 'dark' : 'light';
+    setMode(newMode);
+  };
+
   return (
     <FormGroup>
       <FormControlLabel
-        control={<MaterialUISwitch sx={{ m: 1 }} defaultChecked />}
+        control={
+          <MaterialUISwitch 
+            sx={{ m: 1 }} 
+            checked={mode === 'dark'}
+            onChange={handleSwitch}
+          />
+        }
       />
     </FormGroup>
   );

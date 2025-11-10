@@ -94,8 +94,25 @@ function Main() {
 
   return (
     <>
-      <Box className={styles.popup}>
-        <nav>
+      <Box 
+        sx={{
+          width: '652px',
+          backgroundColor: 'background.default',
+          color: 'text.primary',
+        }}
+      >
+        <Box 
+          component="nav"
+          sx={{
+            width: '100%',
+            height: '76px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingLeft: '15px',
+            backgroundColor: 'background.paper',
+          }}
+        >
           <AddProductForm
             value={currentLink}
             onChange={handleInputChange}
@@ -103,26 +120,29 @@ function Main() {
             showFab={showFab}
             onAddFromTab={handleAddFromTab}
           />
-        </nav>
-        <Box style={{ display: "flex",height: "100%", width: "100%"}}>
+        </Box>
+        
+        <Box sx={{ display: "flex", width: "100%" }}>
           <Box
-            style={{
-              height: "100%"
+            sx={{
+              backgroundColor: 'background.paper',
             }}
             className={styles.listCategories}
           >
             <CategoriesList />
           </Box>
+          
           <Box
-            style={{
+            sx={{
               padding: "10px",
-              height: "100%",
+              height: "400px",
               width: "100%",
-              display : 'flex',
-              alignItems : 'center',
-              justifyContent : 'flex-end',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
               flexDirection: 'column',
-              gap: '20px'
+              gap: '20px',
+              backgroundColor: 'background.default',
             }}
           >
             <Box>
@@ -135,10 +155,22 @@ function Main() {
               />
             </Box>
 
-            <Box style={{height: "80%", width: "100%", overflow : 'auto'}}>
+            <Box sx={{ height: "80%", width: "100%", overflow: 'auto' }}>
               <ProductList products={products} onDelete={handleDelete} />
             </Box>
-            <Button variant="contained" onClick={handleOpenCompare} className={styles.nextButton} endIcon={<ArrowRightAltIcon />}>
+            
+            <Button 
+              variant="contained" 
+              onClick={handleOpenCompare}
+              sx={{
+                width: '234px',
+                height: '40px',
+                borderRadius: '2px',
+                fontSize: '12px',
+                textTransform: 'capitalize',
+              }}
+              endIcon={<ArrowRightAltIcon />}
+            >
               Перейти
             </Button>
           </Box>
@@ -150,3 +182,5 @@ function Main() {
 }
 
 export default Main;
+
+

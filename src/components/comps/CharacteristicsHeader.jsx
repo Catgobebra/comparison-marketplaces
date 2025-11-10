@@ -16,7 +16,6 @@ export default function CharacteristicsHeader({
         scope="row"
         colSpan={999}
         sx={{
-          backgroundColor: "grey.200",
           fontWeight: "bold",
           fontSize: "1.1em",
         }}

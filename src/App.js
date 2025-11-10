@@ -3,16 +3,21 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Main from "./components/pages/Main";
 import ProductTable from "./components/pages/ProductTable";
+import {storageManager} from './components/comps/SwitchTheme';
+import { CssBaseline } from '@mui/material';
+
 
 const theme = createTheme({
   colorSchemes: {
-    dark: false,
+    light: true,
+    dark: true,
   },
 });
 
 function App() {
   return (
-   <ThemeProvider theme={theme} >
+   <ThemeProvider theme={theme} storageManager={storageManager}>
+   <CssBaseline />
    <Router>
       <Routes>
         <Route path="/" element={<Main />} />

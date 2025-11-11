@@ -22,8 +22,42 @@ import useProducts from "../../hooks/useProducts";
 
 import LoadingProgressBar from "../comps/LoadingProgressBar";
 
+
+import { Bar } from 'react-chartjs-2';
+import { Radar } from 'react-chartjs-2';
+
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/swiper.css'
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Colors 
+} from 'chart.js';
+
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
+
+ChartJS.register(
+CategoryScale,
+LinearScale,
+BarElement,
+Title,
+Tooltip,
+Legend,
+Colors,
+RadialLinearScale,
+PointElement,
+LineElement
+);
 
 function ProductTableContent() {
   const dispatch = useDispatch();
@@ -40,6 +74,43 @@ function ProductTableContent() {
   console.log(orderedCharacteristics)
   console.log(selectedCharacteristics)
   console.log(productsInfo)
+  console.log(orderedCharacteristics.slice(0,5).map(x => x.isBestFlags[0]))
+
+  const chartRadialData = []
+  for (let i = 0; i < productsInfo.length; i++) {
+  chartRadialData.push(
+    {
+  labels: orderedCharacteristics.slice(0,5).map(x => x.name),
+  datasets: [
+    {
+      label: 'Значение',
+      data: orderedCharacteristics.slice(0,5).map(x => x.isBestFlags[i]),
+      borderWidth: 1,
+    },
+  ],
+}
+  )
+  }
+  console.log(chartRadialData)
+
+ const chartData = {
+  labels: productsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия'), 
+  datasets: [
+    {
+      label: 'Цена',
+      data: productsInfo.map(product => product.originalPrice)
+    }
+  ]
+  };
+
+  const options = {
+    plugins: {
+      colors: {
+        forceOverride: true
+      }
+    }
+  };
+  
 
   React.useEffect(() => {
     chrome.storage.local.get(["myStoredCompareArray"]).then((result) => {
@@ -367,6 +438,17 @@ function ProductTableContent() {
           </tbody>
         </Table>
       </TableContainer>
+    </Box>
+    <Box sx={{ padding: 2, height: '50%', width: '50%', margin : '0 auto'}}>
+      <Bar data={chartData} options={options} />
+      <Swiper
+      spaceBetween={50}
+      slidesPerView={1}
+      onSlideChange={() => console.log('slide change')}
+      onSwiper={(swiper) => console.log(swiper)}
+      >
+      {chartRadialData.map(x =><SwiperSlide><Radar data={x} options={options} /></SwiperSlide>)}
+      </Swiper>
     </Box>
     <LoadingProgressBar open={loading} />
     </>

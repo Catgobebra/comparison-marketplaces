@@ -106,6 +106,8 @@ function Main() {
           sx={{
             width: '100%',
             height: '76px',
+            position : 'relative',
+            boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -125,9 +127,10 @@ function Main() {
         <Box sx={{ display: "flex", width: "100%" }}>
           <Box
             sx={{
+              boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
+              position : 'relative',
               backgroundColor: 'background.paper',
             }}
-            className={styles.listCategories}
           >
             <CategoriesList />
           </Box>

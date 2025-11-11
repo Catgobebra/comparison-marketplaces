@@ -23,6 +23,7 @@ export default function ProductListItem({ product, onDelete }) {
   const rating = product?.averageRating ?? 0;
   const ratingStat = product?.reviewsCount ?? 0;
   const srcImageItem = product?.imageUrl ?? "";
+  const linkProduct = product?.productUrl ?? "";
 
   return (
     <Card
@@ -54,7 +55,13 @@ export default function ProductListItem({ product, onDelete }) {
       justifyContent : 'center',
       flexDirection: 'column',
       gap : '1px'}}>
-        <img src={srcImageItem} alt="" />
+         <a
+          href={linkProduct}
+          target="_blank"
+          rel="noopener noreferrer"
+          >
+            <img src={srcImageItem} alt="" />
+          </a>
         <Box sx={{ width: '100%', textAlign: 'left', mt: 1 }}>
           <Typography sx={{ fontSize: '17px' }}>
             Цена: <Box component="span" sx={{ fontWeight: 'bold' }}>{cost} ₽</Box>

@@ -70,6 +70,7 @@ function ProductTableContent() {
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
+  const isInitialMount = React.useRef(true);
 
   console.log("Selected products for comparison:", selectedProducts); 
   console.log("Comparison results:", productsInfo);
@@ -129,6 +130,7 @@ function ProductTableContent() {
         try {
           console.log("Starting comparison with:", selectedProducts);
           await doCompare();
+          setOrderedCharacteristics([]);
         } catch (error) {
           console.error("Comparison failed:", error);
         }
@@ -231,7 +233,9 @@ function ProductTableContent() {
   const commonCharacteristics = getCommonCharacteristics();
 
   React.useEffect(() => {
-    if (commonCharacteristics.length > 0 && orderedCharacteristics.length === 0) {
+  if (commonCharacteristics.length > 0) {
+    // Запускаем только при первом монтировании или когда действительно нужно обновить
+    if (isInitialMount.current || orderedCharacteristics.length === 0) {
       const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
         ...char,
         costWeight:
@@ -245,13 +249,15 @@ function ProductTableContent() {
               )
             : 0,
       }));
-      setOrderedCharacteristics(
-        [
-    ...characteristicsWithWeights.filter(item => item.isBestFlags.some(x => x)),
-    ...characteristicsWithWeights.filter(item => !item.isBestFlags.some(x => x))
+      setOrderedCharacteristics([
+        ...characteristicsWithWeights.filter(item => item.isBestFlags.some(x => x)),
+        ...characteristicsWithWeights.filter(item => !item.isBestFlags.some(x => x))
       ]);
+      isInitialMount.current = false;
     }
-  }, [commonCharacteristics, orderedCharacteristics.length, selectedCharacteristics]);
+  }
+}, [commonCharacteristics, selectedCharacteristics]);
+
 
   const findCharacteristic = React.useCallback(
     (id) => {

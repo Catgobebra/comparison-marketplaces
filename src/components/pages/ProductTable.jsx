@@ -234,7 +234,6 @@ function ProductTableContent() {
 
   React.useEffect(() => {
   if (commonCharacteristics.length > 0) {
-    // Запускаем только при первом монтировании или когда действительно нужно обновить
     if (isInitialMount.current || orderedCharacteristics.length === 0) {
       const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
         ...char,

@@ -20,8 +20,7 @@ import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 
 import useProducts from "../../hooks/useProducts";
 
-import LoadingProgressBar from "../comps/LoadingProgressBar";
-
+import SwitchTheme from "../comps/SwitchTheme";
 
 import { Bar } from 'react-chartjs-2';
 import { Radar } from 'react-chartjs-2';
@@ -45,6 +44,7 @@ import {
 
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
+import LoadingBackdrop from "../comps/LoadingBackdrop";
 
 ChartJS.register(
 CategoryScale,
@@ -62,7 +62,7 @@ LineElement
 function ProductTableContent() {
   const dispatch = useDispatch();
   const productsInfo = useSelector((state) => state.compareProducts.compare_products); 
-  const originalProducts = useSelector((state) => state.products.products);
+  const selectedProducts = useSelector((state) => state.selectedProduct?.selectedProducts || []); 
 
   const { doCompare, loading } = useProducts();
 
@@ -71,10 +71,8 @@ function ProductTableContent() {
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
 
-  console.log(orderedCharacteristics)
-  console.log(selectedCharacteristics)
-  console.log(productsInfo)
-  console.log(orderedCharacteristics.slice(0,5).map(x => x.isBestFlags[0]))
+  console.log("Selected products for comparison:", selectedProducts); 
+  console.log("Comparison results:", productsInfo);
 
   const chartRadialData = []
   for (let i = 0; i < productsInfo.length; i++) {
@@ -91,7 +89,6 @@ function ProductTableContent() {
 }
   )
   }
-  console.log(chartRadialData)
 
  const chartData = {
   labels: productsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия'), 
@@ -110,37 +107,38 @@ function ProductTableContent() {
       }
     }
   };
-  
 
   React.useEffect(() => {
     chrome.storage.local.get(["myStoredCompareArray"]).then((result) => {
       if (result.myStoredCompareArray && result.myStoredCompareArray.length > 0) {
         dispatch(changeCompareProducts(result.myStoredCompareArray));
-      } else if (originalProducts && originalProducts.length > 0) {
+      } else if (selectedProducts && selectedProducts.length > 0) {
         console.log("Нет результатов сравнения. Выполните сравнение товаров.");
       }
     });
-  }, [dispatch, originalProducts]);
+  }, [dispatch, selectedProducts]); 
 
   React.useEffect(() => {
     const performComparison = async () => {
       if (productsInfo && productsInfo.length > 0) {
-        console.log(productsInfo)
+        console.log("Results already exist:", productsInfo);
         return;
       }
 
-      if (originalProducts && originalProducts.length > 0) {
+      if (selectedProducts && selectedProducts.length > 0) {
         try {
+          console.log("Starting comparison with:", selectedProducts);
           await doCompare();
         } catch (error) {
           console.error("Comparison failed:", error);
         }
+      } else {
+        console.log("No selected products for comparison");
       }
     };
 
     performComparison();
-  }, [doCompare, originalProducts,productsInfo]);
-
+  }, [doCompare,productsInfo, selectedProducts]);
 
   React.useEffect(() => {
   if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
@@ -382,6 +380,22 @@ function ProductTableContent() {
 
   return (
     <>
+     <Box 
+      component="nav"
+      sx={{
+        width: '100%',
+        height: '76px',
+        position : 'relative',
+        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        paddingLeft: '15px',
+        backgroundColor: 'background.paper',
+      }}
+    >
+      <SwitchTheme />
+    </Box>
     <Box sx={{ padding: 2 }}>
       <TableContainer component={Paper}>
         <Table
@@ -450,7 +464,7 @@ function ProductTableContent() {
       {chartRadialData.map(x =><SwiperSlide><Radar data={x} options={options} /></SwiperSlide>)}
       </Swiper>
     </Box>
-    <LoadingProgressBar open={loading} />
+    <LoadingBackdrop open={loading} />
     </>
   );
 }

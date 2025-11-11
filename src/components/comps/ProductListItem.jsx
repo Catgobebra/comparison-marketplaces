@@ -13,7 +13,16 @@ import styles from './ProductListItem.module.sass';
 
 import ReliabilityChip from './ReliabilityChip';
 
+import useProducts from "../../hooks/useProducts";
+
+
 export default function ProductListItem({ product, onDelete }) {
+  const {
+    addToSelected,
+    selectedProducts,
+    removeFromSelected
+  } = useProducts();
+
   const title = product?.productName
     ? product.productName.length > 30
       ? product.productName.slice(0, 30) + "..."
@@ -24,6 +33,19 @@ export default function ProductListItem({ product, onDelete }) {
   const ratingStat = product?.reviewsCount ?? 0;
   const srcImageItem = product?.imageUrl ?? "";
   const linkProduct = product?.productUrl ?? "";
+  const isSelected = selectedProducts?.some(p => p.article === product.article) || false;
+
+  const handleCompareClick = async () => {
+    if (isSelected) {
+      await removeFromSelected(product);
+    } else {
+      await addToSelected(product);
+    }
+    /* try {
+      await doCompare();
+    } catch (e) {} */
+    
+  };
 
   return (
     <Card
@@ -71,7 +93,9 @@ export default function ProductListItem({ product, onDelete }) {
             <Rating name="size-large" defaultValue={1} max={1} readOnly size="large" /><Box component="span" sx={{ fontWeight: 'bold' }}>{rating.toFixed(1)}</Box>({ratingStat}) <ReliabilityChip sx={{fontSize: '10px',marginLeft:'2px'}} averageRating={rating} reviewsCount={ratingStat} />
           </Typography>
         </Box>
-        <Button className={styles.compareButton}>Сравнить продукт</Button>
+        <Button color={isSelected ? "secondary" : "primary"} className={styles.compareButton} onClick={handleCompareClick}>
+          {isSelected ? "Убрать из сравнения" : "Сравнить продукт"}
+        </Button>
       </CardContent> 
     </Card>
   );

@@ -13,8 +13,6 @@ import CategoriesList from "../comps/CategoriesList";
 import useProducts from "../../hooks/useProducts";
 import { MarketplaceParser } from "../../utils/parseMarketplace";
 
-import styles from "./Main.module.sass";
-
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
 function Main() {

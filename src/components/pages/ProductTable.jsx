@@ -231,7 +231,7 @@ function ProductTableContent() {
   const commonCharacteristics = getCommonCharacteristics();
 
   React.useEffect(() => {
-    if (commonCharacteristics.length > 0 && orderedCharacteristics.length === 0) {
+    if (commonCharacteristics.length > 0) {
       const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
         ...char,
         costWeight:
@@ -251,7 +251,7 @@ function ProductTableContent() {
     ...characteristicsWithWeights.filter(item => !item.isBestFlags.some(x => x))
       ]);
     }
-  }, [commonCharacteristics, orderedCharacteristics.length, selectedCharacteristics]);
+  }, [commonCharacteristics, selectedCharacteristics]);
 
   const findCharacteristic = React.useCallback(
     (id) => {

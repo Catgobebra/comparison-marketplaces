@@ -233,12 +233,8 @@ function ProductTableContent() {
   const commonCharacteristics = getCommonCharacteristics();
 
   React.useEffect(() => {
-<<<<<<< HEAD
   if (commonCharacteristics.length > 0) {
     if (isInitialMount.current || orderedCharacteristics.length === 0) {
-=======
-    if (commonCharacteristics.length > 0) {
->>>>>>> 86f9774315583f2355387c49bc256e91e4999d1a
       const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
         ...char,
         costWeight:
@@ -258,13 +254,9 @@ function ProductTableContent() {
       ]);
       isInitialMount.current = false;
     }
-<<<<<<< HEAD
   }
 }, [commonCharacteristics, selectedCharacteristics]);
 
-=======
-  }, [commonCharacteristics, selectedCharacteristics]);
->>>>>>> 86f9774315583f2355387c49bc256e91e4999d1a
 
   const findCharacteristic = React.useCallback(
     (id) => {

@@ -18,6 +18,8 @@ import CharacteristicsHeader from "../comps/CharacteristicsHeader";
 import CharacteristicRow from "../comps/CharacteristicRow";
 import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 
+import { getPriceInfo } from "../../utils/tableLogic";
+
 import useProducts from "../../hooks/useProducts";
 
 import SwitchTheme from "../comps/SwitchTheme";
@@ -45,6 +47,7 @@ import {
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 import LoadingBackdrop from "../comps/LoadingBackdrop";
+import { borderColor } from "@mui/system";
 
 ChartJS.register(
 CategoryScale,
@@ -84,6 +87,7 @@ function ProductTableContent() {
     {
       label: 'Значение',
       data: orderedCharacteristics.slice(0,5).map(x => x.isBestFlags[i]),
+      fill: true,
       borderWidth: 1,
     },
   ],
@@ -91,12 +95,25 @@ function ProductTableContent() {
   )
   }
 
+const zzz = {
+  labels: [1,2,3,4,5],
+  datasets: [
+    {
+      label: 'Значение',
+      data: [1,2,3,4,5],
+      backgroundColor: ['rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)'],
+      borderColor: ['rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)'],
+      borderWidth: 1,
+    },
+  ],
+}
+
  const chartData = {
   labels: productsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия'), 
   datasets: [
     {
       label: 'Цена',
-      data: productsInfo.map(product => product.originalPrice)
+      data: productsInfo.map(product => getPriceInfo(product).min)
     }
   ]
   };
@@ -104,8 +121,13 @@ function ProductTableContent() {
   const options = {
     plugins: {
       colors: {
-        forceOverride: true
-      }
+        forceOverride: true,
+        propagate: true
+      },
+      scale: {
+          min: 0,
+          max: 1,
+      },
     }
   };
 
@@ -129,7 +151,7 @@ function ProductTableContent() {
       if (selectedProducts && selectedProducts.length > 0) {
         try {
           console.log("Starting comparison with:", selectedProducts);
-          await doCompare();
+          await doCompare(); //!
           setOrderedCharacteristics([]);
         } catch (error) {
           console.error("Comparison failed:", error);

@@ -14,8 +14,9 @@ export const getCostWeight = (
   ) =>
 
   {
+    const newLength = selectedChars.length
     const isSelect = selectedChars.includes(name);
-    const baseWeight = isSelect ? Math.ceil((len_ - position) / len_ * 10) : 1;
+    const baseWeight = isSelect ? Math.ceil((newLength - position) / newLength * 10) : 1;
     const selectionMultiplier = isSelect ? 2 : 1;
     const rawWeight = baseWeight * manualWeight * selectionMultiplier;
     return Math.min(20, Math.max(0, Math.ceil(rawWeight)));

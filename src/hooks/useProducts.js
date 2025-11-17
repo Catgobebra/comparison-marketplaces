@@ -19,9 +19,9 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
     message: "",
   });
 
-  console.log("Products:", products);
+  /* console.log("Products:", products);
   console.log("Selected Products:", selectedProducts);
-  console.log("Compare Products:", compareProducts);
+  console.log("Compare Products:", compareProducts); */
 
   const abortRef = useRef(null);
 

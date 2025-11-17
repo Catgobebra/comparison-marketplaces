@@ -36,6 +36,7 @@ import {
   RadialLinearScale,
   PointElement,
   LineElement,
+  Filler,
   LinearScale,
   BarElement,
   Title,
@@ -59,7 +60,8 @@ Legend,
 Colors,
 RadialLinearScale,
 PointElement,
-LineElement
+LineElement,
+Filler
 );
 
 function ProductTableContent() {
@@ -94,19 +96,6 @@ function ProductTableContent() {
 }
   )
   }
-
-const zzz = {
-  labels: [1,2,3,4,5],
-  datasets: [
-    {
-      label: 'Значение',
-      data: [1,2,3,4,5],
-      backgroundColor: ['rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)'],
-      borderColor: ['rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)','rgb(255,0,0)'],
-      borderWidth: 1,
-    },
-  ],
-}
 
  const chartData = {
   labels: productsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия'), 
@@ -489,7 +478,7 @@ const zzz = {
       onSwiper={(swiper) => console.log(swiper)}
       >
       {chartRadialData.map(x =><SwiperSlide><Radar data={x} options={options} /></SwiperSlide>)}
-      </Swiper>
+      </Swiper> 
     </Box>
     <LoadingBackdrop open={loading} />
     </>

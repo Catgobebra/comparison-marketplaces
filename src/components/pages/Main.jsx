@@ -1,5 +1,5 @@
 /* global chrome */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
@@ -11,11 +11,17 @@ import SnackbarAlert from "../comps/SnackbarAlert";
 import CategoriesList from "../comps/CategoriesList";
 
 import useProducts from "../../hooks/useProducts";
+import useCategories from "../../hooks/useCategories";
+
 import { MarketplaceParser } from "../../utils/parseMarketplace";
 
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
-function Main() {
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DndProvider } from 'react-dnd';
+
+
+function MainContent() {
   const {
     products,
     loading,
@@ -26,9 +32,31 @@ function Main() {
     doCompare,
     loadCompareProducts
   } = useProducts();
+
+  const { 
+    categories,
+    addProductToCategory,
+    removeProductFromCategory 
+  } = useCategories();
+
+  const [currentCategory, setCurrentCategory] = useState("Всё");
+  console.log(currentCategory)
+
   const [currentLink, setCurrentLink] = useState("");
   const [currentUrl, setCurrentUrl] = useState("");
   const [showFab, setShowFab] = useState(false);
+
+  const filteredProducts = useMemo(() => {
+    if (currentCategory === "Всё") {
+      return products;
+    }
+    
+    const articlesInCategory = categories[currentCategory] || [];
+
+    const articlesSet = new Set(articlesInCategory);
+    
+    return products.filter(product => articlesSet.has(product.article));
+  }, [products, categories, currentCategory]);
 
   useEffect(() => {
     try {
@@ -70,10 +98,10 @@ function Main() {
 
   const handleDelete = (product) => remove(product);
 
+  const handleAddInCategory = (productId, categoryName) => addProductToCategory(productId, categoryName);
+  const handleDeleteInCategory = (productId, categoryName) => removeProductFromCategory(productId, categoryName);
+
   const handleOpenCompare = async () => {
-    /* try {
-      await doCompare();
-    } catch (e) {} */
     try {
       if (typeof chrome !== "undefined" && chrome.tabs?.create) {
         chrome.tabs.create({
@@ -130,7 +158,10 @@ function Main() {
               backgroundColor: 'background.paper',
             }}
           >
-            <CategoriesList />
+            <CategoriesList 
+              currentCategory={currentCategory}
+              onCategoryChange={setCurrentCategory} 
+            />
           </Box>
           
           <Box
@@ -147,7 +178,7 @@ function Main() {
             }}
           >
             <Box>
-              <CartBadge count={products.length} />
+              <CartBadge count={filteredProducts.length} />
               <SnackbarAlert
                 open={snackbar.open}
                 severity={snackbar.severity}
@@ -157,7 +188,12 @@ function Main() {
             </Box>
 
             <Box sx={{ height: "80%", width: "100%", overflow: 'auto' }}>
-              <ProductList products={products} onDelete={handleDelete} />
+              <ProductList 
+                products={filteredProducts} 
+                onDelete={handleDelete} 
+                onAddInCategory={handleAddInCategory}
+                onDeleteInCategory={handleDeleteInCategory}
+              />
             </Box>
             
             <Button 
@@ -182,6 +218,10 @@ function Main() {
   );
 }
 
-export default Main;
-
-
+export default function Main() {
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <MainContent />
+    </DndProvider>
+  );
+};

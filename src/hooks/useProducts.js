@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../redux-state/reducers/products";
 import { changeCompareProducts } from "../redux-state/reducers/compareProduct";
 import { changeSelectedProducts } from "../redux-state/reducers/selectedProducts";
+import useCategories  from './useCategories';
 import * as api from "../api/products";
 
 export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
@@ -11,6 +12,8 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
   const products = useSelector((s) => (s.products && s.products.products) || []);
   const selectedProducts = useSelector((s) => s.selectedProduct?.selectedProducts || []);
   const compareProducts = useSelector((s) => (s.compareProducts && s.compareProducts.compare_products) || []);
+
+  const { addProductToCategory,removeProductFromCategory } = useCategories();
 
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -168,6 +171,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
         const newProducts = [...products, info];
         dispatch(changeProducts(newProducts));
         persist(newProducts);
+        await addProductToCategory(info.article, "Всё");
 
         setSnackbar({
           open: true,
@@ -251,6 +255,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
       const newSelected = selectedProducts.filter(p => p.article !== product.article);
       dispatch(changeSelectedProducts(newSelected));
       persistSelected(newSelected);
+      removeProductFromCategory(product.article, "Всё")//!
 
       
       setSnackbar({ open: true, severity: "info", message: "Товар удалён" });

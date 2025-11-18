@@ -2,6 +2,7 @@ import React from "react";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import DeleteIcon from "@mui/icons-material/Delete";
 import Box from "@mui/material/Box";
 import Typography from '@mui/material/Typography';
@@ -14,14 +15,18 @@ import styles from './ProductListItem.module.sass';
 import ReliabilityChip from './ReliabilityChip';
 
 import useProducts from "../../hooks/useProducts";
+import useCategories from "../../hooks/useCategories";
 
-
-export default function ProductListItem({ product, onDelete }) {
+export default function ProductListItem({ product, onDelete,onAddInCategory,onDeleteInCategory}) {
   const {
     addToSelected,
     selectedProducts,
     removeFromSelected
   } = useProducts();
+  const { 
+    isProductInCategory 
+  } = useCategories();
+
 
   const title = product?.productName
     ? product.productName.length > 30
@@ -34,6 +39,8 @@ export default function ProductListItem({ product, onDelete }) {
   const srcImageItem = product?.imageUrl ?? "";
   const linkProduct = product?.productUrl ?? "";
   const isSelected = selectedProducts?.some(p => p.article === product.article) || false;
+  const isFavorute = isProductInCategory(product.article, "Избранное")
+  
 
   const handleCompareClick = async () => {
     if (isSelected) {
@@ -67,8 +74,9 @@ export default function ProductListItem({ product, onDelete }) {
           aria-label="favorite" 
           size="small"
           color="primary"
+          onClick={() =>  isFavorute ? onDeleteInCategory(product.article,'Избранное') : onAddInCategory(product.article,'Избранное') } //!
         >
-          <FavoriteBorderIcon />
+          {isFavorute ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
       </Box>
 

@@ -1,100 +1,107 @@
-/* global chrome */
-import React from "react";
-import List from '@mui/material/List';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemText from '@mui/material/ListItemText';
-import TextField from '@mui/material/TextField';
-
-import { Box, IconButton } from "@mui/material";
-
+import React, { useState } from "react";
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  TextField,
+  Box,
+  IconButton,
+  Typography
+} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import useCategories  from "../../hooks/useCategories";
 
-import { useState } from "react";
+export default function CategoriesList({currentCategory, onCategoryChange}) {
+  const { categories, isLoading, addCategory, removeCategory, reservedCategories } = useCategories();
+  const [inputValue, setInputValue] = useState('');
 
-import { useDispatch, useSelector } from "react-redux";
-import { changeFilterProducts } from "../../redux-state/reducers/filterProducts";
-
-import styles from './CategoriesList.module.sass';
-
-export default function CategoriesList(props) {
-    const dispatch = useDispatch();
-    const productFilters = useSelector((s) => (s.filterProducts && s.filterProducts.filterProducts) || {});
-    const [inputValue, setInputValue] = useState('');
-    console.log(productFilters)
-    React.useEffect(() => {
-        chrome.storage.local.get(["myStoredFiltersDict"]).then((result) => {
-          if (result.myStoredFiltersDict && Object.keys(result.myStoredFiltersDict).length > 0) {
-
-          const { "Всё": all = [], "Избранное": favorites = [], ...otherCategories } = result.myStoredFiltersDict;
-          dispatch(changeFilterProducts({ "Всё": all, "Избранное": favorites, ...otherCategories }));
-
-          } else if (productFilters && productFilters.length > 0) {
-            dispatch(changeFilterProducts(productFilters))
-          }
-        });
-      }, [dispatch]); 
-
-      const saveToChromeStorage = async (filters) => {
-        try {
-            if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
-                await chrome.storage.local.set({ 
-                    myStoredFiltersDict: filters
-                });
-                console.log("Saved to Chrome Storage:", filters);
-            }
-        } catch (e) {
-            console.error("chrome.storage.set failed", e);
-        }
-    };
-
-
-    const addCategory = async (value) => {
-        if (!value || value.trim() === '' || productFilters[value] || Number(value)) return;
-
-        const newCategories = {...productFilters, [value] : []};
-        dispatch(changeFilterProducts(newCategories));
-        await saveToChromeStorage(newCategories)
+  const handleInputBlur = () => {
+    if (inputValue.trim()) {
+      addCategory(inputValue);
+      setInputValue('');
     }
+  };
 
-    const handleInputChange = (e) => {
-        setInputValue(e.target.value);
+  const handleCategoryClick = (categoryName) => {
+    onCategoryChange(categoryName);
+  };
+
+  const handleInputKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      if (addCategory(inputValue)) {
+        setInputValue('');
+      }
     }
+  };
 
-    const removeCategory = async (value) => {
-        const { [value]: removed, ...newCategories } = productFilters;
-        dispatch(changeFilterProducts(newCategories));
-        await saveToChromeStorage(newCategories);
-    }
-
+  if (isLoading) {
     return (
-        <List sx={{width: "88px", overflow : 'scroll'}}>
-            {
-                Object.keys(productFilters).map((element, index) => 
-                    (<ListItem component="div" disablePadding key={index} sx={{position : 'relative'}}>
-                            <ListItemButton>
-                            {(element !== "Всё" && element !== "Избранное") && <IconButton 
-                            aria-label={`category-${index}`}
-                            size="small"
-                            color="primary"
-                            sx={{position : 'absolute', right : '1px', 'top' : '0', fontSize : '20px', padding : '0'}} 
-                            onClick={() => removeCategory(element)}
-                            >
-                            <CloseIcon/>
-                            </IconButton>}
-                            <ListItemText className={styles.listElement} primary={element} />
-                            </ListItemButton>
-                    </ListItem>)
-                )
-            }
-            <ListItem component="div" disablePadding>
-                <Box sx={{'padding' : '8px'}}>
-                    <TextField id="standard-basic" label="Введи данные" variant="standard" onChange={handleInputChange} value={inputValue} onBlur={() => {
-                    if (inputValue.trim() !== '') {
-                        addCategory(inputValue);
-                        setInputValue('');}}} />     
-                </Box>
-            </ListItem>
-        </List>
+      <Box sx={{ width: "88px", display: "flex", justifyContent: "center", p: 2 }}>
+        <Typography variant="body2">Загрузка...</Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ width: "88px", height: "100%", overflowY: "scroll" }}>
+      <List dense sx={{ width: "100%" }}>
+        {Object.keys(categories).map((categoryName) => (
+          <ListItem key={categoryName} disablePadding sx={{ position: "relative" }}>
+            <ListItemButton sx={{ minHeight: 48 }}
+            onClick={() => handleCategoryClick(categoryName)}>
+              <ListItemText 
+                primary={categoryName} 
+                primaryTypographyProps={{
+                  fontSize: "0.875rem",
+                  noWrap: true,
+                  title: categoryName
+                }}
+              />
+              
+              {!reservedCategories.includes(categoryName) && (
+                <IconButton
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    right: 1,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    opacity: 0.6,
+                    "&:hover": { opacity: 1 }
+                  }}
+                  onClick={() => removeCategory(categoryName)}
+                  aria-label={`Удалить категорию ${categoryName}`}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              )}
+            </ListItemButton>
+          </ListItem>
+        ))}
+        
+        <ListItem disablePadding>
+          <Box sx={{ p: 1, width: "100%" }}>
+            <TextField
+              size="small"
+              variant="outlined"
+              placeholder="Новая категория"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onBlur={handleInputBlur}
+              onKeyPress={handleInputKeyPress}
+              inputProps={{ maxLength: 20 }}
+              sx={{
+                "& .MuiInputBase-root": { height: 32 },
+                "& .MuiOutlinedInput-input": { 
+                  fontSize: "0.875rem",
+                  padding: "6px 8px"
+                }
+              }}
+            />
+          </Box>
+        </ListItem>
+      </List>
+    </Box>
   );
 }

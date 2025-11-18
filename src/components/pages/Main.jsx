@@ -78,6 +78,12 @@ function MainContent() {
 
   const handleInputChange = (e) => setCurrentLink(e.target.value);
 
+  const handleProductDrop = (productId, categoryName) => {
+    addProductToCategory(productId, categoryName);
+    
+    alert(`Товар ${productId} добавлен в категорию "${categoryName}"`);
+  };
+
   const handleAdd = async (link) => {
     const sku = MarketplaceParser.parseSku(link);
     if (!sku) {
@@ -161,6 +167,7 @@ function MainContent() {
             <CategoriesList 
               currentCategory={currentCategory}
               onCategoryChange={setCurrentCategory} 
+              onProductDrop={handleProductDrop}
             />
           </Box>
           

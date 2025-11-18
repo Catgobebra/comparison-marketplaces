@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* global chrome */
+import React, { useState, useEffect, useCallback } from "react";
 import {
   List,
   ListItem,
@@ -10,21 +11,99 @@ import {
   Typography
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
-import useCategories  from "../../hooks/useCategories";
+import { useDispatch, useSelector } from "react-redux";
+import { useDrop } from 'react-dnd';
+import { changeFilterProducts } from "../../redux-state/reducers/filterProducts";
+import  useCategories  from "../../hooks/useCategories";
+import { ItemTypes } from './ItemTypes';
 
-export default function CategoriesList({currentCategory, onCategoryChange}) {
-  const { categories, isLoading, addCategory, removeCategory, reservedCategories } = useCategories();
+const RESERVED_CATEGORIES = ["Всё", "Избранное"];
+
+const DroppableCategory = ({ 
+  categoryName, 
+  currentCategory, 
+  onCategoryChange, 
+  onProductDrop,
+  onRemoveCategory 
+}) => {
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: ItemTypes.PRODUCT,
+    drop: (item) => {
+      if (onProductDrop) {
+        onProductDrop(item.id, categoryName);
+      }
+      return { name: categoryName };
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  }), [categoryName, onProductDrop]);
+
+  const isSelected = categoryName === currentCategory;
+
+  return (
+    <ListItem 
+      ref={drop}
+      disablePadding 
+      sx={{ 
+        position: "relative",
+        backgroundColor: isOver ? 'action.hover' : 'transparent',
+        transition: 'background-color 0.2s'
+      }}
+    >
+      <ListItemButton 
+        sx={{ 
+          minHeight: 48,
+          backgroundColor: isSelected ? 'action.selected' : 'transparent'
+        }}
+        onClick={() => onCategoryChange(categoryName)}
+      >
+        <ListItemText 
+          primary={categoryName} 
+          primaryTypographyProps={{
+            fontSize: "0.875rem",
+            noWrap: true,
+            title: categoryName,
+            fontWeight: isSelected ? 'bold' : 'normal'
+          }}
+        />
+        
+        {!RESERVED_CATEGORIES.includes(categoryName) && (
+          <IconButton
+            size="small"
+            sx={{
+              position: "absolute",
+              right: 1,
+              top: "50%",
+              transform: "translateY(-50%)",
+              opacity: 0.6,
+              "&:hover": { opacity: 1 }
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveCategory(categoryName);
+            }}
+            aria-label={`Удалить категорию ${categoryName}`}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
+      </ListItemButton>
+    </ListItem>
+  );
+};
+
+export default function CategoriesList({ currentCategory, onCategoryChange, onProductDrop }) {
+  const { categories, isLoading, addCategory, removeCategory } = useCategories();
   const [inputValue, setInputValue] = useState('');
+
+  const handleInputChange = (e) => setInputValue(e.target.value);
 
   const handleInputBlur = () => {
     if (inputValue.trim()) {
       addCategory(inputValue);
       setInputValue('');
     }
-  };
-
-  const handleCategoryClick = (categoryName) => {
-    onCategoryChange(categoryName);
   };
 
   const handleInputKeyPress = (e) => {
@@ -44,40 +123,17 @@ export default function CategoriesList({currentCategory, onCategoryChange}) {
   }
 
   return (
-    <Box sx={{ width: "88px", height: "100%", overflowY: "scroll" }}>
+    <Box sx={{ width: "88px", height: "100%", overflow: "auto" }}>
       <List dense sx={{ width: "100%" }}>
         {Object.keys(categories).map((categoryName) => (
-          <ListItem key={categoryName} disablePadding sx={{ position: "relative" }}>
-            <ListItemButton sx={{ minHeight: 48 }}
-            onClick={() => handleCategoryClick(categoryName)}>
-              <ListItemText 
-                primary={categoryName} 
-                primaryTypographyProps={{
-                  fontSize: "0.875rem",
-                  noWrap: true,
-                  title: categoryName
-                }}
-              />
-              
-              {!reservedCategories.includes(categoryName) && (
-                <IconButton
-                  size="small"
-                  sx={{
-                    position: "absolute",
-                    right: 1,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    opacity: 0.6,
-                    "&:hover": { opacity: 1 }
-                  }}
-                  onClick={() => removeCategory(categoryName)}
-                  aria-label={`Удалить категорию ${categoryName}`}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              )}
-            </ListItemButton>
-          </ListItem>
+          <DroppableCategory
+            key={categoryName}
+            categoryName={categoryName}
+            currentCategory={currentCategory}
+            onCategoryChange={onCategoryChange}
+            onProductDrop={onProductDrop}
+            onRemoveCategory={removeCategory}
+          />
         ))}
         
         <ListItem disablePadding>
@@ -87,7 +143,7 @@ export default function CategoriesList({currentCategory, onCategoryChange}) {
               variant="outlined"
               placeholder="Новая категория"
               value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
+              onChange={handleInputChange}
               onBlur={handleInputBlur}
               onKeyPress={handleInputKeyPress}
               inputProps={{ maxLength: 20 }}

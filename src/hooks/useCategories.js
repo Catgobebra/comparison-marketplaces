@@ -78,7 +78,6 @@ export default function useCategories() {
     return (productFilters[categoryName] || []).includes(productId);
   }, [productFilters]);
 
-
   const removeProductFromCategory = useCallback(async (productId, categoryName) => {
     if (!productFilters[categoryName]) {
       return false;
@@ -93,6 +92,16 @@ export default function useCategories() {
     dispatch(changeFilterProducts(updatedFilters));
     await saveToStorage(updatedFilters);
     return true;
+  }, [productFilters, dispatch, saveToStorage]);
+
+  const removeProductFromAll = useCallback(async (productId) => {
+  const updatedCategories = Object.keys(productFilters).reduce((acc, categoryName) => {
+    acc[categoryName] = productFilters[categoryName].filter(id => id !== productId);
+    return acc;
+  }, {});
+  
+  dispatch(changeFilterProducts(updatedCategories));
+  await saveToStorage(updatedCategories);
   }, [productFilters, dispatch, saveToStorage]);
 
   const addCategory = useCallback(async (categoryName) => {

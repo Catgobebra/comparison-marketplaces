@@ -13,7 +13,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
   const selectedProducts = useSelector((s) => s.selectedProduct?.selectedProducts || []);
   const compareProducts = useSelector((s) => (s.compareProducts && s.compareProducts.compare_products) || []);
 
-  const { addProductToCategory,removeProductFromCategory } = useCategories();
+  const { addProductToCategory,removeProductFromAll } = useCategories();
 
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -247,7 +247,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
    * @param {object} product
    */
   const remove = useCallback(
-    (product) => {
+    async (product) => {
       const newProducts = products.filter((p) => p !== product);
       dispatch(changeProducts(newProducts));
       persist(newProducts);
@@ -255,7 +255,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
       const newSelected = selectedProducts.filter(p => p.article !== product.article);
       dispatch(changeSelectedProducts(newSelected));
       persistSelected(newSelected);
-      removeProductFromCategory(product.article, "Всё")//!
+      await removeProductFromAll(product.article)//!
 
       
       setSnackbar({ open: true, severity: "info", message: "Товар удалён" });

@@ -4,6 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import DeleteIcon from "@mui/icons-material/Delete";
+import ClearIcon from '@mui/icons-material/Clear'
 import Box from "@mui/material/Box";
 import Typography from '@mui/material/Typography';
 import Card from '@mui/material/Card';
@@ -17,7 +18,7 @@ import useProducts from "../../hooks/useProducts";
 import useCategories from "../../hooks/useCategories";
 import { ItemTypes } from './ItemTypes';
 
-export default function ProductListItem({ product, onDelete }) {
+export default function ProductListItem({ product, onDelete,currentCategory }) {
   const {
     remove,
     addToSelected,
@@ -106,6 +107,18 @@ export default function ProductListItem({ product, onDelete }) {
           {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
       </Box>
+
+      {(currentCategory !== "Всё" && currentCategory !== "Избранное") &&
+      <Box sx={{ position: "absolute", top: 81, right: 8, zIndex: 1 }}>
+        <IconButton 
+          aria-label="delete-category" 
+          size="small"
+          color="primary"
+          onClick={() => removeProductFromCategory(product.article,currentCategory)}
+        >
+        <ClearIcon />
+        </IconButton>
+      </Box>}
 
       <CardContent style={{
         display: 'flex', 

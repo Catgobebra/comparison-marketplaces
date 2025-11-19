@@ -200,6 +200,7 @@ function MainContent() {
                 onDelete={handleDelete} 
                 onAddInCategory={handleAddInCategory}
                 onDeleteInCategory={handleDeleteInCategory}
+                currentCategory={currentCategory}
               />
             </Box>
             

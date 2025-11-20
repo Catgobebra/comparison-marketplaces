@@ -80,8 +80,12 @@ function MainContent() {
 
   const handleProductDrop = (productId, categoryName) => {
     addProductToCategory(productId, categoryName);
-    
-    alert(`Товар ${productId} добавлен в категорию "${categoryName}"`);
+
+    setSnackbarState({
+        open: true,
+        severity: "success",
+        message: `Товар добавлен в категорию "${categoryName}`,
+    });
   };
 
   const handleAdd = async (link) => {

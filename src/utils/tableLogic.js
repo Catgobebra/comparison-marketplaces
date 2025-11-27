@@ -12,7 +12,6 @@ export const getCostWeight = (
   selectedChars,
   manualWeight = 1
   ) =>
-
   {
     const newLength = selectedChars.length
     const isSelect = selectedChars.includes(name);

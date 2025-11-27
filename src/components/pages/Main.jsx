@@ -10,12 +10,14 @@ import LoadingBackdrop from "../comps/LoadingBackdrop";
 import SnackbarAlert from "../comps/SnackbarAlert";
 import CategoriesList from "../comps/CategoriesList";
 
+import { useDispatch, useSelector } from "react-redux";
+
 import useProducts from "../../hooks/useProducts";
-import useCategories from "../../hooks/useCategories";
 
 import { MarketplaceParser } from "../../utils/parseMarketplace";
 
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
+import {addProductToCategory, removeProductFromCategory } from "../../redux-state/reducers/filterProducts";
 
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
@@ -33,11 +35,8 @@ function MainContent() {
     loadCompareProducts
   } = useProducts();
 
-  const { 
-    categories,
-    addProductToCategory,
-    removeProductFromCategory 
-  } = useCategories();
+  const categories = useSelector((s) => s.filterProducts?.filterProducts)
+  const dispatch = useDispatch() 
 
   const [currentCategory, setCurrentCategory] = useState("Всё");
   console.log(currentCategory)
@@ -79,7 +78,7 @@ function MainContent() {
   const handleInputChange = (e) => setCurrentLink(e.target.value);
 
   const handleProductDrop = (productId, categoryName) => {
-    addProductToCategory(productId, categoryName);
+    dispatch(addProductToCategory({productId : productId,categoryName : categoryName}));
 
     setSnackbarState({
         open: true,
@@ -108,8 +107,8 @@ function MainContent() {
 
   const handleDelete = (product) => remove(product);
 
-  const handleAddInCategory = (productId, categoryName) => addProductToCategory(productId, categoryName);
-  const handleDeleteInCategory = (productId, categoryName) => removeProductFromCategory(productId, categoryName);
+  const handleAddInCategory = (productId, categoryName) => dispatch(addProductToCategory({productId : productId, categoryName : categoryName}));
+  const handleDeleteInCategory = (productId, categoryName) => dispatch(removeProductFromCategory({productId : productId,categoryName : categoryName}));
 
   const handleOpenCompare = async () => {
     try {

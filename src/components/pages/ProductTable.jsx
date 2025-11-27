@@ -120,15 +120,15 @@ function ProductTableContent() {
     }
   };
 
-  React.useEffect(() => {
-    chrome.storage.local.get(["myStoredCompareArray"]).then((result) => {
+  /* React.useEffect(() => {
+      chrome.storage.local.get(["myStoredCompareArray"]).then((result) => {
       if (result.myStoredCompareArray && result.myStoredCompareArray.length > 0) {
         dispatch(changeCompareProducts(result.myStoredCompareArray));
       } else if (selectedProducts && selectedProducts.length > 0) {
         console.log("Нет результатов сравнения. Выполните сравнение товаров.");
       }
     });
-  }, [dispatch, selectedProducts]); 
+  }, [dispatch, selectedProducts]);  */
 
   React.useEffect(() => {
     const performComparison = async () => {

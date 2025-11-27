@@ -1,5 +1,5 @@
 /* global chrome */
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   List,
   ListItem,
@@ -8,14 +8,12 @@ import {
   TextField,
   Box,
   IconButton,
-  Typography
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch, useSelector } from "react-redux";
 import { useDrop } from 'react-dnd';
-import { changeFilterProducts } from "../../redux-state/reducers/filterProducts";
-import  useCategories  from "../../hooks/useCategories";
 import { ItemTypes } from './ItemTypes';
+import { addCategory, removeCategory } from "../../redux-state/reducers/filterProducts";
 
 const RESERVED_CATEGORIES = ["Всё", "Избранное"];
 
@@ -40,6 +38,7 @@ const DroppableCategory = ({
   }), [categoryName, onProductDrop]);
 
   const isSelected = categoryName === currentCategory;
+  const dispatch = useDispatch()
 
   return (
     <ListItem 
@@ -81,7 +80,7 @@ const DroppableCategory = ({
             }}
             onClick={(e) => {
               e.stopPropagation();
-              onRemoveCategory(categoryName);
+              dispatch(onRemoveCategory(categoryName));
             }}
             aria-label={`Удалить категорию ${categoryName}`}
           >
@@ -94,33 +93,34 @@ const DroppableCategory = ({
 };
 
 export default function CategoriesList({ currentCategory, onCategoryChange, onProductDrop }) {
-  const { categories, isLoading, addCategory, removeCategory } = useCategories();
+  const dispatch = useDispatch()  
+  const categories = useSelector((s) => s.filterProducts?.filterProducts)
   const [inputValue, setInputValue] = useState('');
 
   const handleInputChange = (e) => setInputValue(e.target.value);
 
   const handleInputBlur = () => {
     if (inputValue.trim()) {
-      addCategory(inputValue);
+      dispatch(addCategory(inputValue));
       setInputValue('');
     }
   };
 
   const handleInputKeyPress = (e) => {
     if (e.key === 'Enter') {
-      if (addCategory(inputValue)) {
-        setInputValue('');
-      }
+      console.log('+')
+      dispatch(addCategory(inputValue))
+      setInputValue('')
     }
   };
 
-  if (isLoading) {
+ /*  if (isLoading) {
     return (
       <Box sx={{ width: "88px", display: "flex", justifyContent: "center", p: 2 }}>
         <Typography variant="body2">Загрузка...</Typography>
       </Box>
     );
-  }
+  } */
 
   return (
     <Box sx={{ width: "88px", height: "100%", overflow: "auto" }}>

@@ -4,7 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { changeProducts } from "../redux-state/reducers/products";
 import { changeCompareProducts } from "../redux-state/reducers/compareProduct";
 import { changeSelectedProducts } from "../redux-state/reducers/selectedProducts";
-import useCategories  from './useCategories';
+import {addProductToCategory, removeProductFromAll } from "../redux-state/reducers/filterProducts";
+/* import useCategories  from './useCategories';
+ */import {useGetProductBySkuQuery} from '../redux-state/api'
 import * as api from "../api/products";
 
 export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
@@ -13,7 +15,9 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
   const selectedProducts = useSelector((s) => s.selectedProduct?.selectedProducts || []);
   const compareProducts = useSelector((s) => (s.compareProducts && s.compareProducts.compare_products) || []);
 
-  const { addProductToCategory,removeProductFromAll } = useCategories();
+  //const {data: info, isLoading} = useGetProductBySkuQuery(url)
+
+  //const { addProductToCategory,removeProductFromAll } = useCategories();
 
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -26,9 +30,9 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
   console.log("Selected Products:", selectedProducts);
   console.log("Compare Products:", compareProducts); */
 
-  const abortRef = useRef(null);
+  //const abortRef = useRef(null);
 
-  const persist = useCallback((newProducts) => {
+  /* const persist = useCallback((newProducts) => {
     try {
       if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
         chrome.storage.local
@@ -38,7 +42,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
     } catch (e) {
       console.error("chrome.storage.set failed", e);
     }
-  }, []);
+  }, []); */
 
   const persistSelected = useCallback((newSelectedProducts) => {
     try {
@@ -100,14 +104,6 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
     };
   }, [dispatch]);
 
-  useEffect(() => {
-    return () => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
-    };
-  }, []);
-
   const setSnackbarState = useCallback((state) => {
     setSnackbar((prev) => ({ ...prev, ...state }));
   }, []);
@@ -135,8 +131,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
    * addByUrl - запрашивает данные по url и добавляет товар в список
    * @param {string} url
    */
-  const addByUrl = useCallback(
-    async (url) => {
+  const addByUrl = (url) => {
       if (!url) {
         setSnackbar({ open: true, severity: "error", message: "url пустой" });
         throw new Error("url empty");
@@ -153,25 +148,12 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
 
       setLoading(true);
 
-      const controller = new AbortController();
-      abortRef.current = controller;
-      const signal = controller.signal;
-
       try {
-        const fetchFn = async () => {
-          return await api.getProductByUrl(url);
-        };
-
-        const info = await withRetry(fetchFn);
-
-        if (!info || info.productName == null) {
-          throw new Error("product is null");
-        }
-
+        const info = []
         const newProducts = [...products, info];
         dispatch(changeProducts(newProducts));
-        persist(newProducts);
-        await addProductToCategory(info.article, "Всё");
+        //persist(newProducts);
+        //await addProductToCategory(info.article, "Всё");
 
         setSnackbar({
           open: true,
@@ -198,12 +180,9 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
         });
         throw e;
       } finally {
-        if (abortRef.current === controller) abortRef.current = null;
         setLoading(false);
       }
-    },
-    [dispatch, persist, products, withRetry]
-  );
+  };
 
   const addToSelected = useCallback((product) => {
     if (selectedProducts.some(p => p.article === product.article)) {
@@ -250,17 +229,17 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
     async (product) => {
       const newProducts = products.filter((p) => p !== product);
       dispatch(changeProducts(newProducts));
-      persist(newProducts);
+      //persist(newProducts);
       
       const newSelected = selectedProducts.filter(p => p.article !== product.article);
       dispatch(changeSelectedProducts(newSelected));
-      persistSelected(newSelected);
-      await removeProductFromAll(product.article)//!
+      //persistSelected(newSelected);
+      //await removeProductFromAll(product.article)//!
 
       
       setSnackbar({ open: true, severity: "info", message: "Товар удалён" });
     },
-    [dispatch, persist, products, selectedProducts, persistSelected]
+    [dispatch, /* persist */, products, selectedProducts, persistSelected]
   );
 
   /**
@@ -278,7 +257,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
 
     setLoading(true);
     const controller = new AbortController();
-    abortRef.current = controller;
+    //abortRef.current = controller;
 
     try {
       const fetchFn = async () => {
@@ -325,7 +304,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
       });
       throw e;
     } finally {
-      if (abortRef.current === controller) abortRef.current = null;
+      //if (abortRef.current === controller) abortRef.current = null;
       setLoading(false);
     }
   }, [dispatch, selectedProducts, withRetry]);

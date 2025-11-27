@@ -15,7 +15,8 @@ import { useDrag } from 'react-dnd';
 import styles from './ProductListItem.module.sass';
 import ReliabilityChip from './ReliabilityChip';
 import useProducts from "../../hooks/useProducts";
-import useCategories from "../../hooks/useCategories";
+import { useDispatch, useSelector } from "react-redux";
+import {addProductToCategory, removeProductFromCategory } from "../../redux-state/reducers/filterProducts";
 import { ItemTypes } from './ItemTypes';
 
 export default function ProductListItem({ product, onDelete,currentCategory }) {
@@ -25,13 +26,10 @@ export default function ProductListItem({ product, onDelete,currentCategory }) {
     selectedProducts,
     removeFromSelected
   } = useProducts();
+  
+  const dispatch = useDispatch() 
+  const categories = useSelector((s) => s.filterProducts?.filterProducts)
 
-  const { 
-    categories,
-    addProductToCategory,
-    removeProductFromCategory,
-    toggleProductInCategory 
-  } = useCategories();
   
   const title = product?.productName
     ? product.productName.length > 30
@@ -68,10 +66,6 @@ export default function ProductListItem({ product, onDelete,currentCategory }) {
     }
   };
 
-  const handleFavoriteClick = async () => {
-    await toggleProductInCategory(product.article, 'Избранное');
-  };
-
   const handleDelete = async () => {
     await remove(product);
   };
@@ -102,7 +96,7 @@ export default function ProductListItem({ product, onDelete,currentCategory }) {
           aria-label="favorite" 
           size="small"
           color={isFavorite ? "error" : "primary"}
-          onClick={() => isFavorite ? removeProductFromCategory(product.article,'Избранное') : addProductToCategory(product.article,'Избранное') }
+          onClick={() => isFavorite ? dispatch(removeProductFromCategory({productId : product.article,categoryName : 'Избранное'})) : dispatch(addProductToCategory({productId : product.article,categoryName :'Избранное'})) }
         >
           {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
@@ -114,7 +108,7 @@ export default function ProductListItem({ product, onDelete,currentCategory }) {
           aria-label="delete-category" 
           size="small"
           color="primary"
-          onClick={() => removeProductFromCategory(product.article,currentCategory)}
+          onClick={() => dispatch(removeProductFromCategory({productId : product.article,categoryName : currentCategory}))}
         >
         <ClearIcon />
         </IconButton>

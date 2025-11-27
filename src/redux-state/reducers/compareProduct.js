@@ -10,7 +10,10 @@ export const productsCompareReducer = createSlice({
   reducers: {
     changeCompareProducts: (state, action) => {
         state.compare_products = action.payload
-    }
+    },
+    increment(state) {
+      state.value++
+    },
   }
 })
 

@@ -10,7 +10,7 @@ export const selectedProductsReducer = createSlice({
   reducers: {
     changeSelectedProducts : (state,action) => {
         state.selectedProducts = action.payload
-    }
+    },
   }
 })
 

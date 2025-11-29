@@ -1,63 +1,95 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  filterProducts: {"Всё" : [], "Избранное" : []},
-}
+  filterProducts: [
+    {
+      id: 1,
+      name: "Всё",
+      productList: [],
+      isSystem: true,
+    },
+    {
+      id: 2,
+      name: "Избранное",
+      productList: [],
+      isSystem: true,
+    },
+  ],
+};
 
 export const filterProductsReducer = createSlice({
-  name: 'filterProducts',
+  name: "filterProducts",
   initialState,
   reducers: {
-    changeFilterProducts : (state,action) => {
-        state.filterProducts = action.payload
+    changeFilterProducts: (state, action) => {
+      state.filterProducts = action.payload;
     },
 
-    addCategory : (state,action) => {
-      const trimmedName = action.payload.trim();
-      if (!state.filterProducts[trimmedName]) {
-        state.filterProducts[trimmedName] = [];
+    addCategory: (state, action) => {
+      const { categoryName } = action.payload;
+      const trimmedName = categoryName.trim();
+      const maxId = state.filterProducts.reduce(
+        (max, category) => Math.max(max, category.id),
+        0
+      );
+      const newId = maxId + 1;
+      if (!state.filterProducts.some((x) => x.name === trimmedName)) {
+        state.filterProducts.push({
+          id: newId,
+          name: trimmedName,
+          productList: [],
+          isSystem: false,
+        });
       }
     },
 
-    addProductToCategory : (state,action) => {
-        const currentProducts = state.filterProducts[action.payload.categoryName] || []
-        const updatedFilters = {
-          ...state.filterProducts,
-          [action.payload.categoryName]: [...currentProducts, action.payload.productId]
-        }
-        state.filterProducts = updatedFilters
-    },
-
-    removeProductFromCategory : (state,action) => {
-      const currentProducts = state.filterProducts[action.payload.categoryName] || []
-      const updatedFilters = {
-      ...state.filterProducts,
-      [action.payload.categoryName]: currentProducts.filter(id => id !== action.payload.productId)
+    addProductToCategory: (state, action) => {
+      const { categoryId, productId } = action.payload;
+      const category = state.filterProducts.find(
+        (cat) => cat.id === categoryId
+      );
+      if (category && !category.productList.includes(productId)) {
+        category.productList.push(productId);
       }
-      state.filterProducts = updatedFilters
     },
 
-    removeCategory : (state,action) => {
-      delete state.filterProducts[action.payload]
+    removeProductFromCategory: (state, action) => {
+      const { categoryId, productId } = action.payload;
+      const category = state.filterProducts.find(
+        (cat) => cat.id === categoryId
+      );
+      if (category) {
+        category.productList = category.productList.filter(
+          (id) => id !== productId
+        );
+      }
     },
 
-    removeProductFromAll : (state,action) => {
-      const updatedCategories = Object.keys(state.filterProducts).reduce((acc, categoryName) => {
-        acc[categoryName] = state.filterProducts[categoryName].filter(id => id !== action.payload.productId);
-        return acc;
-      }, {})
-      state.filterProducts = updatedCategories
-    }
-  }
-})
+    removeCategory: (state, action) => {
+      const { categoryId } = action.payload;
+      state.filterProducts = state.filterProducts.filter(
+        (x) => x.id !== categoryId || x.isSystem
+      );
+    },
 
-export const { 
+    removeProductFromAll: (state, action) => {
+      const { productId } = action.payload;
+      state.filterProducts.forEach((category) => {
+        category.productList = category.productList.filter(
+          (id) => id !== productId
+        );
+      });
+    },
+  },
+});
+
+export const {
   changeFilterProducts,
   addCategory,
   addProductToCategory,
   removeProductFromCategory,
   removeCategory,
-  removeProductFromAll
-} = filterProductsReducer.actions
+  removeProductFromAll,
+} = filterProductsReducer.actions;
 
-export default filterProductsReducer.reducer
+export default filterProductsReducer.reducer;

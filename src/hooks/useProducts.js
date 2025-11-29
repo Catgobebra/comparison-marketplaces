@@ -44,88 +44,9 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
     }
   }, []); */
 
-  const persistSelected = useCallback((newSelectedProducts) => {
-    try {
-      if (typeof chrome !== "undefined" && chrome.storage?.local?.set) {
-        chrome.storage.local
-          .set({ myStoredSelectedArray: newSelectedProducts })
-          .catch(console.error);
-      }
-    } catch (e) {
-      console.error("chrome.storage.set failed", e);
-    }
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-    try {
-      if (typeof chrome !== "undefined" && chrome.storage?.local?.get) {
-        chrome.storage.local
-          .get(["myStoredArray"])
-          .then((result) => {
-            if (!mounted) return;
-            if (result?.myStoredArray?.length) {
-              dispatch(changeProducts(result.myStoredArray));
-            }
-          })
-          .catch((e) => {
-            console.error("chrome.storage.get failed", e);
-          });
-      }
-    } catch (e) {
-      console.error("chrome.storage unavailable", e);
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch]);
-
-  useEffect(() => {
-    let mounted = true;
-    try {
-      if (typeof chrome !== "undefined" && chrome.storage?.local?.get) {
-        chrome.storage.local
-          .get(["myStoredSelectedArray"])
-          .then((result) => {
-            if (!mounted) return;
-            if (result?.myStoredSelectedArray?.length) {
-              dispatch(changeSelectedProducts(result.myStoredSelectedArray));
-            }
-          })
-          .catch((e) => {
-            console.error("chrome.storage.get failed", e);
-          });
-      }
-    } catch (e) {
-      console.error("chrome.storage unavailable", e);
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [dispatch]);
-
   const setSnackbarState = useCallback((state) => {
     setSnackbar((prev) => ({ ...prev, ...state }));
   }, []);
-
-  const withRetry = useCallback(
-    async (fn, attempts = retries, delay = retryDelay) => {
-      let lastErr;
-      for (let i = 0; i <= attempts; i++) {
-        try {
-          return await fn();
-        } catch (err) {
-          lastErr = err;
-          if (err.name === "AbortError") throw err;
-          if (i < attempts) {
-            await new Promise((r) => setTimeout(r, delay));
-          }
-        }
-      }
-      throw lastErr;
-    },
-    [retries, retryDelay]
-  );
 
   /**
    * addByUrl - запрашивает данные по url и добавляет товар в список
@@ -196,7 +117,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
 
     const newSelected = [...selectedProducts, product];
     dispatch(changeSelectedProducts(newSelected));
-    persistSelected(newSelected);
+    //persistSelected(newSelected);
 
     console.log("Added to selected:", newSelected);
     
@@ -205,12 +126,12 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
       severity: 'success',
       message: 'Товар добавлен для сравнения'
     });
-  }, [dispatch, selectedProducts, persistSelected]);
+  }, [dispatch, selectedProducts, /* persistSelected */]);
 
   const removeFromSelected = useCallback((product) => {
     const newSelected = selectedProducts.filter(p => p.article !== product.article);
     dispatch(changeSelectedProducts(newSelected));
-    persistSelected(newSelected);
+    //persistSelected(newSelected);
     
     console.log('Removed from selected, new array:', newSelected);
     
@@ -219,7 +140,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
       severity: 'info',
       message: 'Товар удален из выбранных'
     });
-  }, [dispatch, selectedProducts, persistSelected]);
+  }, [dispatch, selectedProducts, /* persistSelected */]);
 
   /**
    * remove - удаляет товар из списка
@@ -239,7 +160,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
       
       setSnackbar({ open: true, severity: "info", message: "Товар удалён" });
     },
-    [dispatch, /* persist */, products, selectedProducts, persistSelected]
+    [dispatch, /* persist */, products, selectedProducts, /* persistSelected */]
   );
 
   /**
@@ -264,7 +185,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
         return await api.compareProducts(selectedProducts);
       };
 
-      const result = await withRetry(fetchFn);
+      const result = false //await withRetry(fetchFn);
 
       const newCompareProducts = Array.isArray(result.result) ? result.result : [];
       dispatch(changeCompareProducts(newCompareProducts));
@@ -307,7 +228,7 @@ export default function useProducts({ retries = 1, retryDelay = 500 } = {}) {
       //if (abortRef.current === controller) abortRef.current = null;
       setLoading(false);
     }
-  }, [dispatch, selectedProducts, withRetry]);
+  }, [dispatch, selectedProducts, /* withRetry */]);
 
   const loadCompareProducts = useCallback(() => {
     try {

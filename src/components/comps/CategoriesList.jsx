@@ -18,6 +18,7 @@ import { addCategory, removeCategory } from "../../redux-state/reducers/filterPr
 const RESERVED_CATEGORIES = ["Всё", "Избранное"];
 
 const DroppableCategory = ({ 
+  categoryId,
   categoryName, 
   currentCategory, 
   onCategoryChange, 
@@ -80,7 +81,7 @@ const DroppableCategory = ({
             }}
             onClick={(e) => {
               e.stopPropagation();
-              dispatch(onRemoveCategory(categoryName));
+              dispatch(onRemoveCategory(categoryId));
             }}
             aria-label={`Удалить категорию ${categoryName}`}
           >
@@ -125,10 +126,11 @@ export default function CategoriesList({ currentCategory, onCategoryChange, onPr
   return (
     <Box sx={{ width: "88px", height: "100%", overflow: "auto" }}>
       <List dense sx={{ width: "100%" }}>
-        {Object.keys(categories).map((categoryName) => (
+        {categories.map((categoryObject) => (
           <DroppableCategory
-            key={categoryName}
-            categoryName={categoryName}
+            key={categoryObject.id}
+            categoryId={categoryObject.id}
+            categoryName={categoryObject.name}
             currentCategory={currentCategory}
             onCategoryChange={onCategoryChange}
             onProductDrop={onProductDrop}

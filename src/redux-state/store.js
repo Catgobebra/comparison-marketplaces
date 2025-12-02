@@ -10,18 +10,14 @@ import {
   PURGE,
   REGISTER
  } from 'redux-persist'
-import productsReducer from './reducers/products'
-import productsCompareReducer from  './reducers/compareProduct'
-import selectedProductsReducer from  './reducers/selectedProducts'
-import filterProductsReducer from './reducers/filterProducts'
+import productsReducer from './slices/products'
+import filterProductsReducer from './slices/filterProducts'
 import {api} from './api'
 
 const storage = createChromeStorage(window.chrome, 'local');
 
 const rootReducer = combineReducers({
   products: productsReducer,
-  compareProducts: productsCompareReducer,
-  selectedProduct: selectedProductsReducer,
   filterProducts: filterProductsReducer,
   [api.reducerPath]: api.reducer
 })
@@ -29,6 +25,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   storage,
+  blacklist: [api.reducerPath] 
 }
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

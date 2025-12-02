@@ -5,6 +5,10 @@ export const MarketplaceParser = {
     return null;
   },
 
+  getMarketplace(url) {
+    return this.detectMarketplace(url)
+  },
+
   parseSku(url) {
     const marketplace = this.detectMarketplace(url);
     

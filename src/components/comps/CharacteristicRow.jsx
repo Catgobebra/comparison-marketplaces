@@ -1,8 +1,8 @@
 import React from "react";
-import TextField from "@mui/material/TextField";
 import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
+import Tooltip from '@mui/material/Tooltip';
+import { Button } from "@mui/material"; 
 import { useDrag, useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
 import { DraggableTableRow, StyledTableCell } from "./styledComponents";
@@ -56,7 +56,7 @@ const CharacteristicRow = React.memo(function CharacteristicRow({
   const opacity = isDragging ? 0 : 1;
   
   const labelId = `enhanced-table-checkbox-${characteristic.name}`;
-  
+  console.log(characteristic)
   return (
     <DraggableTableRow
       ref={isDraggable ? (node) => drag(drop(node)) : undefined}
@@ -124,7 +124,11 @@ const CharacteristicRow = React.memo(function CharacteristicRow({
             fontWeight: characteristic.isBestFlags[index] ? "bold" : "normal",
           }}
         >
-          {value}
+         <Tooltip title="Add" placement="top">
+          <Button>
+            {value}
+          </Button>
+         </Tooltip>
         </StyledTableCell>
       ))}
     </DraggableTableRow>

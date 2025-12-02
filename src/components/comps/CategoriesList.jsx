@@ -13,13 +13,11 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch, useSelector } from "react-redux";
 import { useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
-import { addCategory, removeCategory } from "../../redux-state/reducers/filterProducts";
-
-const RESERVED_CATEGORIES = ["Всё", "Избранное"];
+import { addCategory, removeCategory } from "../../redux-state/slices/filterProducts";
 
 const DroppableCategory = ({ 
   categoryId,
-  categoryName, 
+  categoryItem, 
   currentCategory, 
   onCategoryChange, 
   onProductDrop,
@@ -29,16 +27,16 @@ const DroppableCategory = ({
     accept: ItemTypes.PRODUCT,
     drop: (item) => {
       if (onProductDrop) {
-        onProductDrop(item.id, categoryName);
+        onProductDrop(item.id, categoryItem.id);
       }
-      return { name: categoryName };
+      return { name: categoryItem.name };
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
-  }), [categoryName, onProductDrop]);
+  }), [categoryItem.name, onProductDrop]);
 
-  const isSelected = categoryName === currentCategory;
+  const isSelected = categoryId === currentCategory.id;
   const dispatch = useDispatch()
 
   return (
@@ -56,19 +54,19 @@ const DroppableCategory = ({
           minHeight: 48,
           backgroundColor: isSelected ? 'action.selected' : 'transparent'
         }}
-        onClick={() => onCategoryChange(categoryName)}
+        onClick={() => onCategoryChange(categoryItem)}
       >
         <ListItemText 
-          primary={categoryName} 
+          primary={categoryItem.name} 
           primaryTypographyProps={{
             fontSize: "0.875rem",
             noWrap: true,
-            title: categoryName,
+            title: categoryItem.name,
             fontWeight: isSelected ? 'bold' : 'normal'
           }}
         />
         
-        {!RESERVED_CATEGORIES.includes(categoryName) && (
+        {!categoryItem.isSystem && (
           <IconButton
             size="small"
             sx={{
@@ -81,9 +79,9 @@ const DroppableCategory = ({
             }}
             onClick={(e) => {
               e.stopPropagation();
-              dispatch(onRemoveCategory(categoryId));
+              dispatch(onRemoveCategory({categoryId : categoryId}));
             }}
-            aria-label={`Удалить категорию ${categoryName}`}
+            aria-label={`Удалить категорию ${categoryItem.name}`}
           >
             <CloseIcon fontSize="small" />
           </IconButton>
@@ -102,26 +100,17 @@ export default function CategoriesList({ currentCategory, onCategoryChange, onPr
 
   const handleInputBlur = () => {
     if (inputValue.trim()) {
-      dispatch(addCategory(inputValue));
+      dispatch(addCategory({categoryName : inputValue}));
       setInputValue('');
     }
   };
 
   const handleInputKeyPress = (e) => {
     if (e.key === 'Enter') {
-      console.log('+')
-      dispatch(addCategory(inputValue))
+      dispatch(addCategory({categoryName : inputValue}))
       setInputValue('')
     }
   };
-
- /*  if (isLoading) {
-    return (
-      <Box sx={{ width: "88px", display: "flex", justifyContent: "center", p: 2 }}>
-        <Typography variant="body2">Загрузка...</Typography>
-      </Box>
-    );
-  } */
 
   return (
     <Box sx={{ width: "88px", height: "100%", overflow: "auto" }}>
@@ -130,7 +119,7 @@ export default function CategoriesList({ currentCategory, onCategoryChange, onPr
           <DroppableCategory
             key={categoryObject.id}
             categoryId={categoryObject.id}
-            categoryName={categoryObject.name}
+            categoryItem={categoryObject}
             currentCategory={currentCategory}
             onCategoryChange={onCategoryChange}
             onProductDrop={onProductDrop}

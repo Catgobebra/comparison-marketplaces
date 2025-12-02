@@ -1,125 +1,57 @@
-/* global chrome */
-import React, { useState, useEffect, useMemo } from "react";
+import React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 
-import AddProductForm from "../comps/AddProductForm";
+import AddProductForm from "../comps/ProductForm/AddProductForm";
 import ProductList from "../views/local/ProductList";
 import CartBadge from "../comps/CartBadge";
 import LoadingBackdrop from "../comps/LoadingBackdrop";
 import SnackbarAlert from "../comps/SnackbarAlert";
 import CategoriesList from "../comps/CategoriesList";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useSnackbar } from "../../hooks/useSnackbar";
+import { useProducts } from "../../hooks/useProducts";
+import { useCategories } from "../../hooks/useCategories";
+import { useCurrentTab } from "../../hooks/useCurrentTab";
+import { useFilteredProducts } from "../../hooks/useFilteredProducts";
+import { useChrome } from "../../hooks/useChrome";
+import { useProductAddition } from "../../hooks/useProductAddition";
 
-import useProducts from "../../hooks/useProducts";
-
-import { MarketplaceParser } from "../../utils/parseMarketplace";
+import { useLazyGetProductBySkuQuery } from '../../redux-state/api';
 
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
-import {addProductToCategory, removeProductFromCategory } from "../../redux-state/reducers/filterProducts";
 
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
 
+import * as styles from './styles'
 
 function MainContent() {
-  const {
-    products,
-    loading,
-    snackbar,
-    setSnackbarState,
-    addByUrl,
-    remove,
-    doCompare,
-    loadCompareProducts
-  } = useProducts();
+  const [getProduct, { data, isLoading,isFetching, error }] = useLazyGetProductBySkuQuery();
+  const {snackbar, setSnackbarState } = useSnackbar();
+  const {products} = useProducts(data);
+  const { categories, currentCategory, setCurrentCategory, addToCategory } = useCategories();
+  const { currentUrl, showFab } = useCurrentTab(products);
+  const { openComparePage } = useChrome();
+  const { 
+    currentLink, 
+    handleInputChange, 
+    handleAddFromInput, 
+    handleAddFromTab 
+  } = useProductAddition(getProduct);
+  
+  const filteredProducts = useFilteredProducts(products, categories, currentCategory.id);
+ 
+  console.log(products)
+  console.log(categories)
 
-  const categories = useSelector((s) => s.filterProducts?.filterProducts)
-  const dispatch = useDispatch() 
-
-  const [currentCategory, setCurrentCategory] = useState("Всё");
-  console.log(currentCategory)
-
-  const [currentLink, setCurrentLink] = useState("");
-  const [currentUrl, setCurrentUrl] = useState("");
-  const [showFab, setShowFab] = useState(false);
-
-  const filteredProducts = useMemo(() => {
-    if (currentCategory === "Всё") {
-      return products;
-    }
-    
-    const articlesInCategory = categories[currentCategory] || [];
-
-    const articlesSet = new Set(articlesInCategory);
-    
-    return products.filter(product => articlesSet.has(product.article));
-  }, [products, categories, currentCategory]);
-
-  useEffect(() => {
-    try {
-      if (typeof chrome !== "undefined" && chrome.tabs?.query) {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          const url = tabs[0]?.url;
-          if (!url) return;
-          setCurrentUrl(url);
-          const isProduct = MarketplaceParser.isValidUrl(url);
-          setShowFab(
-            isProduct && !products.some((p) => p.article === MarketplaceParser.parseSku(url))
-          );
-        });
-      }
-    } catch (e) {
-      console.error("chrome.tabs unavailable", e);
-    }
-  }, [products]);
-
-  const handleInputChange = (e) => setCurrentLink(e.target.value);
-
-  const handleProductDrop = (productId, categoryName) => {
-    dispatch(addProductToCategory({productId : productId,categoryName : categoryName}));
-
+  const handleProductDrop = (productId, categoryId) => {
+    addToCategory(productId, categoryId);
     setSnackbarState({
-        open: true,
-        severity: "success",
-        message: `Товар добавлен в категорию "${categoryName}`,
+      open: true,
+      severity: "success",
+      message: `Товар добавлен в категорию`,
     });
-  };
-
-  const handleAdd = async (link) => {
-    const sku = MarketplaceParser.parseSku(link);
-    if (!sku) {
-      setSnackbarState({
-        open: true,
-        severity: "error",
-        message: "Неверная или пустая ссылка",
-      });
-      return;
-    }
-    try {
-      await addByUrl(link);
-    } catch (e) {}
-    setCurrentLink("");
-  };
-
-  const handleAddFromTab = () => handleAdd(currentUrl);
-
-  const handleDelete = (product) => remove(product);
-
-  const handleAddInCategory = (productId, categoryName) => dispatch(addProductToCategory({productId : productId, categoryName : categoryName}));
-  const handleDeleteInCategory = (productId, categoryName) => dispatch(removeProductFromCategory({productId : productId,categoryName : categoryName}));
-
-  const handleOpenCompare = async () => {
-    try {
-      if (typeof chrome !== "undefined" && chrome.tabs?.create) {
-        chrome.tabs.create({
-          url: chrome.runtime.getURL("index.html#/comparison"),
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
   };
 
   const handleSnackbarClose = (e, reason) => {
@@ -129,44 +61,19 @@ function MainContent() {
 
   return (
     <>
-      <Box 
-        sx={{
-          width: '652px',
-          backgroundColor: 'background.default',
-          color: 'text.primary',
-        }}
-      >
-        <Box 
-          component="nav"
-          sx={{
-            width: '100%',
-            height: '76px',
-            position : 'relative',
-            boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingLeft: '15px',
-            backgroundColor: 'background.paper',
-          }}
-        >
+      <Box sx={styles.popupContainer}>
+        <Box component="nav" sx={styles.navContainer}>
           <AddProductForm
             value={currentLink}
             onChange={handleInputChange}
-            onAdd={handleAdd}
+            onAdd={handleAddFromInput}
             showFab={showFab}
-            onAddFromTab={handleAddFromTab}
+            onAddFromTab={() => handleAddFromTab(currentUrl)}
           />
         </Box>
         
-        <Box sx={{ display: "flex", width: "100%" }}>
-          <Box
-            sx={{
-              boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
-              position : 'relative',
-              backgroundColor: 'background.paper',
-            }}
-          >
+        <Box sx={styles.mainContainer}>
+          <Box sx={styles.categoryContainer}>
             <CategoriesList 
               currentCategory={currentCategory}
               onCategoryChange={setCurrentCategory} 
@@ -174,19 +81,7 @@ function MainContent() {
             />
           </Box>
           
-          <Box
-            sx={{
-              padding: "10px",
-              height: "400px",
-              width: "100%",
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              flexDirection: 'column',
-              gap: '20px',
-              backgroundColor: 'background.default',
-            }}
-          >
+          <Box sx={styles.mainContentContainer}>
             <Box>
               <CartBadge count={filteredProducts.length} />
               <SnackbarAlert
@@ -197,32 +92,23 @@ function MainContent() {
               />
             </Box>
 
-            <Box sx={{ height: "80%", width: "100%", overflow: 'auto' }}>
+            <Box sx={styles.listProductContainer}>
               <ProductList 
                 products={filteredProducts} 
-                onDelete={handleDelete} 
-                onAddInCategory={handleAddInCategory}
-                onDeleteInCategory={handleDeleteInCategory}
                 currentCategory={currentCategory}
               />
             </Box>
             
             <Button 
               variant="contained" 
-              onClick={handleOpenCompare}
-              sx={{
-                width: '234px',
-                height: '40px',
-                borderRadius: '2px',
-                fontSize: '12px',
-                textTransform: 'capitalize',
-              }}
+              onClick={openComparePage}
+              sx={styles.linkButton}
               endIcon={<ArrowRightAltIcon />}
             >
               Перейти
             </Button>
           </Box>
-          <LoadingBackdrop open={loading} />
+          <LoadingBackdrop open={isLoading} />
         </Box>
       </Box>
     </>
@@ -235,4 +121,4 @@ export default function Main() {
       <MainContent />
     </DndProvider>
   );
-};
+}

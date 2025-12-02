@@ -8,9 +8,6 @@ export const productsReducer = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    changeProducts : (state,action) => {
-        state.products = action.payload
-    },
     addProduct : (state,action) => {
       const {product,marketplace} = action.payload;
       const maxId = state.products.reduce(
@@ -21,7 +18,7 @@ export const productsReducer = createSlice({
       state.products.push(
         {
           id: newId,
-          ...product,
+          productItem : product,
           marketplaceName: marketplace,
           isSelected : false
         }
@@ -31,10 +28,26 @@ export const productsReducer = createSlice({
     removeProduct : (state,action) => {
       const { categoryId } = action.payload;
       state.products = state.products.filter((x) => x.id !== categoryId);
+    },
+
+    addToSelected : (state,action) => {
+      const { categoryId } = action.payload;
+      const product = state.products.find((x) => x.id === categoryId);
+      product.isSelected = true
+    },
+
+    removeFromSelected : (state,action) => {
+      const { categoryId } = action.payload;
+      const product = state.products.find((x) => x.id === categoryId);
+      product.isSelected = false
     }
   }
 })
 
-export const { changeProducts, addProduct, removeProduct } = productsReducer.actions
+export const {
+  addProduct,
+  removeProduct, 
+  addToSelected, 
+  removeFromSelected} = productsReducer.actions
 
 export default productsReducer.reducer

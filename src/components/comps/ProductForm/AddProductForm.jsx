@@ -3,9 +3,7 @@ import Button from "@mui/material/Button";
 import Fab from "@mui/material/Fab";
 import AddIcon from "@mui/icons-material/Add";
 
-import styles from "./AddProductForm.module.sass";
-
-import SwitchTheme from "./SwitchTheme";
+import SwitchTheme from "../SwitchTheme";
 
 import { FormControl, OutlinedInput, InputAdornment } from "@mui/material";
 
@@ -18,7 +16,7 @@ export default function AddProductForm({
 }) {
   return (
     <>
-      <FormControl sx={{ width: "100%" }} className={styles.inputUrl}>
+      <FormControl sx={{ width: "100%" }} /* className={styles.inputUrl} */>
         <OutlinedInput
           placeholder="Вставьте URL-адрес продукта"
           value={value}
@@ -88,7 +86,7 @@ export default function AddProductForm({
           onClick={onAddFromTab}
           color="primary"
           aria-label="add"
-          className={styles.fab}
+          /* className={styles.fab} */
         >
           <AddIcon />
         </Fab>

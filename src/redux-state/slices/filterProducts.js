@@ -21,10 +21,6 @@ export const filterProductsReducer = createSlice({
   name: "filterProducts",
   initialState,
   reducers: {
-    changeFilterProducts: (state, action) => {
-      state.filterProducts = action.payload;
-    },
-
     addCategory: (state, action) => {
       const { categoryName } = action.payload;
       const trimmedName = categoryName.trim();
@@ -45,6 +41,7 @@ export const filterProductsReducer = createSlice({
 
     addProductToCategory: (state, action) => {
       const { categoryId, productId } = action.payload;
+      
       const category = state.filterProducts.find(
         (cat) => cat.id === categoryId
       );
@@ -84,7 +81,6 @@ export const filterProductsReducer = createSlice({
 });
 
 export const {
-  changeFilterProducts,
   addCategory,
   addProductToCategory,
   removeProductFromCategory,

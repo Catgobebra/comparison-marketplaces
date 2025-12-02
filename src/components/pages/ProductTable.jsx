@@ -5,7 +5,6 @@ import TableContainer from "@mui/material/TableContainer";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import { useDispatch, useSelector } from "react-redux";
-import { changeCompareProducts } from "../../redux-state/reducers/compareProduct";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
@@ -19,8 +18,6 @@ import CharacteristicRow from "../comps/CharacteristicRow";
 import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 
 import { getPriceInfo } from "../../utils/tableLogic";
-
-import useProducts from "../../hooks/useProducts";
 
 import SwitchTheme from "../comps/SwitchTheme";
 
@@ -48,28 +45,41 @@ import {
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 import LoadingBackdrop from "../comps/LoadingBackdrop";
-import { borderColor } from "@mui/system";
+import { useGetCompareProductsQuery } from '../../redux-state/api'
 
 ChartJS.register(
-CategoryScale,
-LinearScale,
-BarElement,
-Title,
-Tooltip,
-Legend,
-Colors,
-RadialLinearScale,
-PointElement,
-LineElement,
-Filler
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Colors,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler
 );
 
 function ProductTableContent() {
-  const dispatch = useDispatch();
-  const productsInfo = useSelector((state) => state.compareProducts.compare_products); 
-  const selectedProducts = useSelector((state) => state.selectedProduct?.selectedProducts || []); 
+  const products = useSelector((state) => state.products.products).filter(x => x.isSelected); 
+  let newProducts = products.map(x => x.productItem);
+  console.log(newProducts)
+  const { data: productsInfo, isLoading, error } = useGetCompareProductsQuery(newProducts,{skip: newProducts.length === 0});
+  //const [contentLoaded, setContentLoaded] = React.useState(false);
 
-  const { doCompare, loading } = useProducts();
+  /* React.useEffect(() => {
+    if (!isLoading && productsInfo) {
+      const timer = setTimeout(() => {
+        setContentLoaded(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, productsInfo]); */
+
+  
+
+  console.log(productsInfo)
 
   const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
@@ -77,34 +87,31 @@ function ProductTableContent() {
   const [rankItems, setRankItems] = React.useState([]);
   const isInitialMount = React.useRef(true);
 
-  console.log("Selected products for comparison:", selectedProducts); 
-  console.log("Comparison results:", productsInfo);
-
-  const chartRadialData = []
-  for (let i = 0; i < productsInfo.length; i++) {
-  chartRadialData.push(
-    {
-  labels: orderedCharacteristics.slice(0,5).map(x => x.name),
-  datasets: [
-    {
-      label: 'Значение',
-      data: orderedCharacteristics.slice(0,5).map(x => x.isBestFlags[i]),
-      fill: true,
-      borderWidth: 1,
-    },
-  ],
-}
-  )
+  const chartRadialData = [];
+  if (productsInfo && productsInfo.length > 0) {
+    for (let i = 0; i < productsInfo.length; i++) {
+      chartRadialData.push({
+        labels: orderedCharacteristics.slice(0, 5).map(x => x.name),
+        datasets: [
+          {
+            label: 'Значение',
+            data: orderedCharacteristics.slice(0, 5).map(x => x.isBestFlags[i]),
+            fill: true,
+            borderWidth: 1,
+          },
+        ],
+      });
+    }
   }
 
- const chartData = {
-  labels: productsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия'), 
-  datasets: [
-    {
-      label: 'Цена',
-      data: productsInfo.map(product => getPriceInfo(product).min)
-    }
-  ]
+  const chartData = {
+    labels: productsInfo ? productsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия') : [],
+    datasets: [
+      {
+        label: 'Цена',
+        data: productsInfo ? productsInfo.map(product => getPriceInfo(product).min) : []
+      }
+    ]
   };
 
   const options = {
@@ -114,69 +121,36 @@ function ProductTableContent() {
         propagate: true
       },
       scale: {
-          min: 0,
-          max: 1,
+        min: 0,
+        max: 1,
       },
     }
   };
 
-  /* React.useEffect(() => {
-      chrome.storage.local.get(["myStoredCompareArray"]).then((result) => {
-      if (result.myStoredCompareArray && result.myStoredCompareArray.length > 0) {
-        dispatch(changeCompareProducts(result.myStoredCompareArray));
-      } else if (selectedProducts && selectedProducts.length > 0) {
-        console.log("Нет результатов сравнения. Выполните сравнение товаров.");
+  React.useEffect(() => {
+    if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
+      return;
+    
+    const rank = new Array(productsInfo.length).fill(0);
+
+    orderedCharacteristics.forEach((characteristic) => {
+      if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
+        characteristic.isBestFlags.forEach((isBest, productIndex) => {
+          if (isBest && productIndex < rank.length)
+            rank[productIndex] += characteristic.costWeight;
+        });
       }
     });
-  }, [dispatch, selectedProducts]);  */
 
-  React.useEffect(() => {
-    const performComparison = async () => {
-      if (productsInfo && productsInfo.length > 0) {
-        console.log("Results already exist:", productsInfo);
-        return;
-      }
-
-      if (selectedProducts && selectedProducts.length > 0) {
-        try {
-          console.log("Starting comparison with:", selectedProducts);
-          await doCompare(); //!
-          setOrderedCharacteristics([]);
-        } catch (error) {
-          console.error("Comparison failed:", error);
-        }
-      } else {
-        console.log("No selected products for comparison");
-      }
-    };
-
-    performComparison();
-  }, [doCompare,productsInfo, selectedProducts]);
-
-  React.useEffect(() => {
-  if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
-    return;
-  
-  const rank = new Array(productsInfo.length).fill(0);
-
-  orderedCharacteristics.forEach((characteristic) => {
-    if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
-      characteristic.isBestFlags.forEach((isBest, productIndex) => {
-        if (isBest && productIndex < rank.length)
-          rank[productIndex] += characteristic.costWeight;
-      });
-    }
-  });
-
-  const total = rank.reduce((sum, value) => sum + value, 0);
-  
-  let normalizedRank;
+    const total = rank.reduce((sum, value) => sum + value, 0);
+    
+    let normalizedRank;
     if (total > 0) {
       normalizedRank = rank.map(value => Math.round((value / total) * 100));
     } else {
       normalizedRank = rank.map(() => 100 / rank.length);
     }
-  
+    
     setRankItems(normalizedRank);
   }, [orderedCharacteristics, productsInfo]);
 
@@ -244,30 +218,29 @@ function ProductTableContent() {
   const commonCharacteristics = getCommonCharacteristics();
 
   React.useEffect(() => {
-  if (commonCharacteristics.length > 0) {
-    if (isInitialMount.current || orderedCharacteristics.length === 0) {
-      const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
-        ...char,
-        costWeight:
-          char.costWeight > 0
-            ? getCostWeight(
-                char.name,
-                commonCharacteristics.length,
-                index,
-                selectedCharacteristics,
-                char.manualWeight
-              )
-            : 0,
-      }));
-      setOrderedCharacteristics([
-        ...characteristicsWithWeights.filter(item => item.isBestFlags.some(x => x)),
-        ...characteristicsWithWeights.filter(item => !item.isBestFlags.some(x => x))
-      ]);
-      isInitialMount.current = false;
+    if (commonCharacteristics.length > 0) {
+      if (isInitialMount.current || orderedCharacteristics.length === 0) {
+        const characteristicsWithWeights = commonCharacteristics.map((char, index) => ({
+          ...char,
+          costWeight:
+            char.costWeight > 0
+              ? getCostWeight(
+                  char.name,
+                  commonCharacteristics.length,
+                  index,
+                  selectedCharacteristics,
+                  char.manualWeight
+                )
+              : 0,
+        }));
+        setOrderedCharacteristics([
+          ...characteristicsWithWeights.filter(item => item.isBestFlags.some(x => x)),
+          ...characteristicsWithWeights.filter(item => !item.isBestFlags.some(x => x))
+        ]);
+        isInitialMount.current = false;
+      }
     }
-  }
-}, [commonCharacteristics, selectedCharacteristics]);
-
+  }, [commonCharacteristics, selectedCharacteristics]);
 
   const findCharacteristic = React.useCallback(
     (id) => {
@@ -339,13 +312,27 @@ function ProductTableContent() {
     setOrderedCharacteristics(updatedOrder);
   };
 
-  if (!productsInfo || productsInfo.length === 0)
+  if (isLoading) {
+    return <LoadingBackdrop open={isLoading} />;
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h2>Ошибка загрузки данных</h2>
+        <p>Произошла ошибка при загрузке данных для сравнения.</p>
+      </div>
+    );
+  }
+
+  if (!productsInfo || productsInfo.length === 0) {
     return (
       <div style={{ padding: 20 }}>
         <h2>Нет данных для отображения</h2>
         <p>Вернитесь на главную страницу и добавьте товары для сравнения.</p>
       </div>
     );
+  }
 
   const firstColumnWidth = "30%";
   const productColumnWidth = `${70 / productsInfo.length}%`;
@@ -371,8 +358,8 @@ function ProductTableContent() {
     if (charIndex === -1) return;
     
     let newValue = parseFloat(event.target.value);
-     if (isNaN(newValue))
-        newValue = 0;
+    if (isNaN(newValue))
+      newValue = 0;
     
     if (newValue > 1) newValue = 1;
     if (newValue < 0) newValue = 0;
@@ -396,91 +383,97 @@ function ProductTableContent() {
 
   return (
     <>
-     <Box 
-      component="nav"
-      sx={{
-        width: '100%',
-        height: '76px',
-        position : 'relative',
-        boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingLeft: '15px',
-        backgroundColor: 'background.paper',
-      }}
-    >
-      <SwitchTheme />
-    </Box>
-    <Box sx={{ padding: 2 }}>
-      <TableContainer component={Paper}>
-        <Table
-          sx={{ minWidth: 700, tableLayout: "fixed", width: "100%" }}
-          aria-label="comparison table"
-        >
-          <TableHeader
-            firstColumnWidth={firstColumnWidth}
-            productColumnWidth={productColumnWidth}
-            productsInfo={productsInfo}
-          />
-          <tbody>
-            <ImagesRow productsInfo={productsInfo} />
-            <PriceRow productsInfo={productsInfo} />
-            <RatingRow productsInfo={productsInfo} />
-            <AvailabilityRow productsInfo={productsInfo} />
-
-            <CharacteristicsHeader
-              characteristicsExpanded={characteristicsExpanded}
-              toggleExpanded={() => setCharacteristicsExpanded(!characteristicsExpanded)}
-            />
-
-            {orderedCharacteristics.map((characteristic) => (
-              <CharacteristicRow
-                key={characteristic.name}
-                characteristic={characteristic}
-                firstColumnWidth={firstColumnWidth}
-                productColumnWidth={productColumnWidth}
-                findCharacteristic={findCharacteristic}
-                moveCharacteristic={moveCharacteristic}
-                isSelected={isSelected(characteristic.name)}
-                onToggleSelect={handleToggleSelect}
-                onWeightChange={handleWeightChange}
-                characteristicsExpanded={characteristicsExpanded}
-              />
-            ))}
-
-            {orderedCharacteristics.length === 0 && (
-              <StyledTableRow>
-                <StyledTableCell component="th" scope="row">
-                  <strong>Общие характеристики</strong>
-                </StyledTableCell>
-                {productsInfo.map((product, index) => (
-                  <StyledTableCell key={index} align="center">
-                    <em style={{ color: "#6b7280" }}>
-                      Нет общих характеристик для сравнения
-                    </em>
-                  </StyledTableCell>
-                ))}
-              </StyledTableRow>
-            )}
-
-            <AdditionalInfoRows productsInfo={productsInfo} rankItems={rankItems} />
-          </tbody>
-        </Table>
-      </TableContainer>
-    </Box>
-    <Box sx={{ padding: 2, height: '50%', width: '50%', margin : '0 auto'}}>
-      <Bar data={chartData} options={options} />
-      <Swiper
-      spaceBetween={50}
-      slidesPerView={1}
-      onSlideChange={() => console.log('slide change')}
-      onSwiper={(swiper) => console.log(swiper)}
+      {(isLoading && !productsInfo) ?? <div>Loading...</div>
+      }
+      <Box 
+        component="nav"
+        sx={{
+          width: '100%',
+          height: '76px',
+          position: 'relative',
+          boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          paddingLeft: '15px',
+          backgroundColor: 'background.paper',
+        }}
       >
-      {chartRadialData.map(x =><SwiperSlide><Radar data={x} options={options} /></SwiperSlide>)}
-      </Swiper> 
-    </Box>
-    <LoadingBackdrop open={loading} />
+        <SwitchTheme />
+      </Box>
+      <Box sx={{ padding: 2 }}>
+        <TableContainer component={Paper}>
+          <Table
+            sx={{ minWidth: 700, tableLayout: "fixed", width: "100%" }}
+            aria-label="comparison table"
+          >
+            <TableHeader
+              firstColumnWidth={firstColumnWidth}
+              productColumnWidth={productColumnWidth}
+              productsInfo={productsInfo}
+            />
+            <tbody>
+              <ImagesRow productsInfo={productsInfo} />
+              <PriceRow productsInfo={productsInfo} />
+              <RatingRow productsInfo={productsInfo} />
+              <AvailabilityRow productsInfo={productsInfo} />
+
+              <CharacteristicsHeader
+                characteristicsExpanded={characteristicsExpanded}
+                toggleExpanded={() => setCharacteristicsExpanded(!characteristicsExpanded)}
+              />
+
+              {orderedCharacteristics.map((characteristic) => (
+                <CharacteristicRow
+                  key={characteristic.name}
+                  characteristic={characteristic}
+                  firstColumnWidth={firstColumnWidth}
+                  productColumnWidth={productColumnWidth}
+                  findCharacteristic={findCharacteristic}
+                  moveCharacteristic={moveCharacteristic}
+                  isSelected={isSelected(characteristic.name)}
+                  onToggleSelect={handleToggleSelect}
+                  onWeightChange={handleWeightChange}
+                  characteristicsExpanded={characteristicsExpanded}
+                />
+              ))}
+
+              {orderedCharacteristics.length === 0 && (
+                <StyledTableRow>
+                  <StyledTableCell component="th" scope="row">
+                    <strong>Общие характеристики</strong>
+                  </StyledTableCell>
+                  {productsInfo.map((product, index) => (
+                    <StyledTableCell key={index} align="center">
+                      <em style={{ color: "#6b7280" }}>
+                        Нет общих характеристик для сравнения
+                      </em>
+                    </StyledTableCell>
+                  ))}
+                </StyledTableRow>
+              )}
+
+              <AdditionalInfoRows productsInfo={productsInfo} rankItems={rankItems} />
+            </tbody>
+          </Table>
+        </TableContainer>
+      </Box>
+      <Box sx={{ padding: 2, height: '50%', width: '50%', margin: '0 auto' }}>
+        <Bar data={chartData} options={options} />
+        <Swiper
+          spaceBetween={50}
+          slidesPerView={1}
+          onSlideChange={() => console.log('slide change')}
+          onSwiper={(swiper) => console.log(swiper)}
+        >
+          {chartRadialData.map((x, index) => (
+            <SwiperSlide key={index}>
+              <Radar data={x} options={options} />
+            </SwiperSlide>
+          ))}
+        </Swiper> 
+      </Box>
+      <LoadingBackdrop open={isLoading} />
     </>
   );
 }

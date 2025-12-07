@@ -173,6 +173,52 @@ function ProductTableContent() {
     return characteristics;
   };
 
+    const handleToggleBestFlag = (characteristicName, productIndex) => {
+  setOrderedCharacteristics(prev => {
+    // 1. Обновляем флаг
+    const updated = prev.map(char => 
+      (char.name === characteristicName 
+        ? {
+            ...char,
+            isBestFlags: char.isBestFlags.map((flag, index) => 
+              index === productIndex ? !flag : flag
+            )
+          }
+        : char)
+    );
+    
+    // 2. Сортируем по наличию isBest
+    const sorted = [...updated].sort((a, b) => {
+      const aHasBest = a.isBestFlags.some(x => x);
+      const bHasBest = b.isBestFlags.some(x => x);
+      
+      // Если a имеет isBest, а b - нет, a идет выше
+      if (aHasBest && !bHasBest) return -1;
+      // Если b имеет isBest, а a - нет, b идет выше  
+      if (!aHasBest && bHasBest) return 1;
+      
+      // Сохраняем текущий порядок для элементов в одной группе
+      const aIndex = prev.findIndex(x => x.name === a.name);
+      const bIndex = prev.findIndex(x => x.name === b.name);
+      return aIndex - bIndex;
+    });
+    
+    // 3. Обновляем веса
+    const sortedWithWeights = sorted.map((char, index) => ({
+      ...char,
+      costWeight: getCostWeight(
+        char.name,
+        sorted.length,
+        index,
+        selectedCharacteristics,
+        char.manualWeight
+      )
+    }));
+    
+    return sortedWithWeights;
+  });
+};
+
   const getCommonCharacteristics = React.useCallback(() => {
     if (!productsInfo || productsInfo.length === 0) return [];
     const allCharacteristics = [];
@@ -210,7 +256,7 @@ function ProductTableContent() {
               index_,
               selectedCharacteristics
             )
-          : 0,
+          : 1,
       };
     });
   }, [productsInfo, selectedCharacteristics]);
@@ -306,7 +352,7 @@ function ProductTableContent() {
               newSelected,
               char.manualWeight
             )
-          : 0,
+          : 1,
     }));
     
     setOrderedCharacteristics(updatedOrder);
@@ -435,6 +481,7 @@ function ProductTableContent() {
                   onToggleSelect={handleToggleSelect}
                   onWeightChange={handleWeightChange}
                   characteristicsExpanded={characteristicsExpanded}
+                  onToggleBestFlag={handleToggleBestFlag}
                 />
               ))}
 

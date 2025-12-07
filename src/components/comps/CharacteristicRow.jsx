@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
 import Tooltip from '@mui/material/Tooltip';
@@ -17,7 +17,9 @@ const CharacteristicRow = React.memo(function CharacteristicRow({
   onToggleSelect,
   onWeightChange,
   characteristicsExpanded,
+  onToggleBestFlag
 }) {
+
   const originalIndex = findCharacteristic(characteristic.name).index;
   
   const [{ isDragging }, drag] = useDrag(
@@ -124,10 +126,14 @@ const CharacteristicRow = React.memo(function CharacteristicRow({
             fontWeight: characteristic.isBestFlags[index] ? "bold" : "normal",
           }}
         >
-         <Tooltip title="Add" placement="top">
-          <Button>
+         <Tooltip title={characteristic.isBestFlags[index]
+          ? "Водка шлюхи кальян"
+          : "Фимоз"
+          }
+          placement="top"
+          onClick={() => onToggleBestFlag(characteristic.name, index)}
+          >
             {value}
-          </Button>
          </Tooltip>
         </StyledTableCell>
       ))}

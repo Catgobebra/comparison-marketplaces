@@ -12,6 +12,7 @@ import {
  } from 'redux-persist'
 import productsReducer from './slices/products'
 import filterProductsReducer from './slices/filterProducts'
+import compareReducer from './slices/compareProducts'
 import {api} from './api'
 
 const storage = createChromeStorage(window.chrome, 'local');
@@ -19,6 +20,7 @@ const storage = createChromeStorage(window.chrome, 'local');
 const rootReducer = combineReducers({
   products: productsReducer,
   filterProducts: filterProductsReducer,
+  compareProducts: compareReducer,
   [api.reducerPath]: api.reducer
 })
 

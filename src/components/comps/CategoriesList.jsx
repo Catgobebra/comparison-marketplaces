@@ -13,7 +13,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useDispatch, useSelector } from "react-redux";
 import { useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
-import { addCategory, removeCategory } from "../../redux-state/slices/filterProducts";
+import { addCategory, removeCategory } from "../../redux/slices/filterProducts";
 
 const DroppableCategory = ({ 
   categoryId,

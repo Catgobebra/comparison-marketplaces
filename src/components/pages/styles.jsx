@@ -5,7 +5,6 @@ export const popupContainer = {
 }
 
 export const navContainer = {
-    width: '100%',
     height: '76px',
     position : 'relative',
     boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',

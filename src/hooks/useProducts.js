@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { addProduct, removeProduct } from '../redux-state/slices/products';
+import { addProduct, removeProduct } from '../redux/slices/products';
 import { useCategories } from './useCategories';
 
 

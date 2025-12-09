@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { addToSelected, removeFromSelected } from "../redux-state/slices/products";
+import { addToSelected, removeFromSelected } from "../redux/slices/products";
 
 export function useProductSelection(productId) {
   const dispatch = useDispatch();

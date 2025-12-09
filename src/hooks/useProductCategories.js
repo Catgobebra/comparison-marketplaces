@@ -3,8 +3,8 @@ import {
   addProductToCategory, 
   removeProductFromCategory,
   removeProductFromAll 
-} from "../redux-state/slices/filterProducts";
-import { removeProduct } from "../redux-state/slices/products";
+} from "../redux/slices/filterProducts";
+import { removeProduct } from "../redux/slices/products";
 
 export function useProductCategories() {
   const dispatch = useDispatch();

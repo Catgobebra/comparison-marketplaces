@@ -58,7 +58,6 @@ const CharacteristicRow = React.memo(function CharacteristicRow({
   const opacity = isDragging ? 0 : 1;
   
   const labelId = `enhanced-table-checkbox-${characteristic.name}`;
-  console.log(characteristic)
   return (
     <DraggableTableRow
       ref={isDraggable ? (node) => drag(drop(node)) : undefined}

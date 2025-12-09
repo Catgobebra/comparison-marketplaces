@@ -4,6 +4,8 @@ import Table from "@mui/material/Table";
 import TableContainer from "@mui/material/TableContainer";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+
 import { useDispatch, useSelector } from "react-redux";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -19,6 +21,8 @@ import AdditionalInfoRows from "../comps/AdditionalInfoRows";
 
 import { getPriceInfo } from "../../utils/tableLogic";
 
+import {setProduct} from "../../redux/slices/compareProducts"
+
 import SwitchTheme from "../comps/SwitchTheme";
 
 import { Bar } from 'react-chartjs-2';
@@ -26,6 +30,8 @@ import { Radar } from 'react-chartjs-2';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/swiper.css'
+
+import {useColorScheme } from '@mui/material/styles';
 
 import {
   Chart as ChartJS,
@@ -45,7 +51,7 @@ import {
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 import LoadingBackdrop from "../comps/LoadingBackdrop";
-import { useGetCompareProductsQuery } from '../../redux-state/api'
+import { useGetCompareProductsQuery } from '../../redux/api'
 
 ChartJS.register(
   CategoryScale,
@@ -63,9 +69,33 @@ ChartJS.register(
 
 function ProductTableContent() {
   const products = useSelector((state) => state.products.products).filter(x => x.isSelected); 
+  const newUnicProducts = products.map(x => [x.id,x.productItem.article]);
+  const compareProducts = useSelector((state) => state.compareProducts.lastCompare)
+  const newUnicCompareProducts = compareProducts.map(x => [x?.id,x.productItem?.article]);
   let newProducts = products.map(x => x.productItem);
-  console.log(newProducts)
-  const { data: productsInfo, isLoading, error } = useGetCompareProductsQuery(newProducts,{skip: newProducts.length === 0});
+    const shouldSkip = newProducts.length <= 1 || 
+    JSON.stringify(newUnicCompareProducts) === JSON.stringify(newUnicProducts);
+
+  const { data: productsInfo, isLoading, error, refetch,isFetching } = useGetCompareProductsQuery(newProducts,{skip: shouldSkip});
+  const dispatch = useDispatch()
+  
+  const { mode, setMode } = useColorScheme();
+
+  React.useEffect(() => {
+    if (shouldSkip) {
+      setsProductsInfo(compareProducts.length > 0 ? compareProducts : products);
+    } else if (productsInfo) {
+      setsProductsInfo(productsInfo);
+      dispatch(setProduct({currentCompare: products}));
+    } else {
+      setsProductsInfo(products);
+    }
+  }, [products, compareProducts, productsInfo, shouldSkip, dispatch]);
+
+
+
+  //console.log(mode)
+
   //const [contentLoaded, setContentLoaded] = React.useState(false);
 
   /* React.useEffect(() => {
@@ -77,10 +107,12 @@ function ProductTableContent() {
     }
   }, [isLoading, productsInfo]); */
 
-  
+  const onReload = () => {
+    refetch()
+  }
 
-  console.log(productsInfo)
-
+  //console.log(productsInfo)
+  const [sProductsInfo, setsProductsInfo] = React.useState([]);
   const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
@@ -88,8 +120,8 @@ function ProductTableContent() {
   const isInitialMount = React.useRef(true);
 
   const chartRadialData = [];
-  if (productsInfo && productsInfo.length > 0) {
-    for (let i = 0; i < productsInfo.length; i++) {
+  if (sProductsInfo && sProductsInfo.length > 0) {
+    for (let i = 0; i < sProductsInfo.length; i++) {
       chartRadialData.push({
         labels: orderedCharacteristics.slice(0, 5).map(x => x.name),
         datasets: [
@@ -105,33 +137,51 @@ function ProductTableContent() {
   }
 
   const chartData = {
-    labels: productsInfo ? productsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия') : [],
+    labels: sProductsInfo ? sProductsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия') : [],
     datasets: [
       {
         label: 'Цена',
-        data: productsInfo ? productsInfo.map(product => getPriceInfo(product).min) : []
+        fill: true,
+        data: sProductsInfo ? sProductsInfo.map(product => getPriceInfo(product).min) : []
       }
     ]
   };
 
-  const options = {
-    plugins: {
-      colors: {
-        forceOverride: true,
-        propagate: true
+  const optionsZ = {
+    scales: {
+      x: {
+        grid: {
+          color: mode === 'light' ? "#263238" :"#eceff1",
+        }
       },
-      scale: {
-        min: 0,
-        max: 1,
+      y: {
+        grid: {
+          color: mode === 'light' ? "#263238" :"#eceff1",
+        }
       },
+      }
     }
-  };
+
+  const options = {
+    scales: {
+      r: {
+        suggestedMin: 0,
+        suggestedMax: 1,
+        grid: {
+          color: mode === 'light' ? "#263238" :"#eceff1"
+        },
+        angleLines: {
+          color: mode === 'light' ? "#263238" :"#eceff1"
+        }
+      }
+    }
+  }
 
   React.useEffect(() => {
-    if (!orderedCharacteristics || !productsInfo || productsInfo.length === 0)
+    if (!orderedCharacteristics || !sProductsInfo || sProductsInfo.length === 0)
       return;
     
-    const rank = new Array(productsInfo.length).fill(0);
+    const rank = new Array(sProductsInfo.length).fill(0);
 
     orderedCharacteristics.forEach((characteristic) => {
       if (characteristic && characteristic.isBestFlags && characteristic.costWeight) {
@@ -152,7 +202,7 @@ function ProductTableContent() {
     }
     
     setRankItems(normalizedRank);
-  }, [orderedCharacteristics, productsInfo]);
+  }, [orderedCharacteristics, sProductsInfo]);
 
   const getProductCharacteristics = (product) => {
     if (!product.characteristics) return [];
@@ -175,7 +225,6 @@ function ProductTableContent() {
 
     const handleToggleBestFlag = (characteristicName, productIndex) => {
   setOrderedCharacteristics(prev => {
-    // 1. Обновляем флаг
     const updated = prev.map(char => 
       (char.name === characteristicName 
         ? {
@@ -187,23 +236,18 @@ function ProductTableContent() {
         : char)
     );
     
-    // 2. Сортируем по наличию isBest
     const sorted = [...updated].sort((a, b) => {
       const aHasBest = a.isBestFlags.some(x => x);
       const bHasBest = b.isBestFlags.some(x => x);
       
-      // Если a имеет isBest, а b - нет, a идет выше
       if (aHasBest && !bHasBest) return -1;
-      // Если b имеет isBest, а a - нет, b идет выше  
       if (!aHasBest && bHasBest) return 1;
       
-      // Сохраняем текущий порядок для элементов в одной группе
       const aIndex = prev.findIndex(x => x.name === a.name);
       const bIndex = prev.findIndex(x => x.name === b.name);
       return aIndex - bIndex;
     });
     
-    // 3. Обновляем веса
     const sortedWithWeights = sorted.map((char, index) => ({
       ...char,
       costWeight: getCostWeight(
@@ -220,23 +264,23 @@ function ProductTableContent() {
 };
 
   const getCommonCharacteristics = React.useCallback(() => {
-    if (!productsInfo || productsInfo.length === 0) return [];
+    if (!sProductsInfo || sProductsInfo.length === 0) return [];
     const allCharacteristics = [];
     const characteristicNames = new Set();
-    productsInfo.forEach((product, index) => {
+    sProductsInfo.forEach((product, index) => {
       const productChars = getProductCharacteristics(product);
       allCharacteristics[index] = productChars;
       productChars.forEach((char) => characteristicNames.add(char.name));
     });
     const commonCharNames = Array.from(characteristicNames).filter((charName) =>
-      productsInfo.every((_, index) =>
+      sProductsInfo.every((_, index) =>
         allCharacteristics[index].some((char) => char.name === charName)
       )
     );
     return commonCharNames.map((charName, index_) => {
       const values = [];
       const isBestFlags = [];
-      productsInfo.forEach((_, index) => {
+      sProductsInfo.forEach((_, index) => {
         const char = allCharacteristics[index].find((c) => c.name === charName);
         if (char) {
           values.push(char.value);
@@ -259,7 +303,7 @@ function ProductTableContent() {
           : 1,
       };
     });
-  }, [productsInfo, selectedCharacteristics]);
+  }, [sProductsInfo, selectedCharacteristics]);
 
   const commonCharacteristics = getCommonCharacteristics();
 
@@ -358,8 +402,15 @@ function ProductTableContent() {
     setOrderedCharacteristics(updatedOrder);
   };
 
-  if (isLoading) {
-    return <LoadingBackdrop open={isLoading} />;
+  if (newProducts.length === 1) {
+    return <div style={{ padding: 20 }}>
+        <h2>Вы не можете сравнить единственный товар</h2>
+        <p>Вернитесь на главную страницу и добавьте товары для сравнения.</p>
+    </div>
+  }
+
+  if (isLoading || isFetching) {
+    return <LoadingBackdrop open={(isLoading || isFetching)} />;
   }
 
   if (error) {
@@ -371,7 +422,7 @@ function ProductTableContent() {
     );
   }
 
-  if (!productsInfo || productsInfo.length === 0) {
+  if (!sProductsInfo || sProductsInfo.length === 0) {
     return (
       <div style={{ padding: 20 }}>
         <h2>Нет данных для отображения</h2>
@@ -380,8 +431,8 @@ function ProductTableContent() {
     );
   }
 
-  const firstColumnWidth = "30%";
-  const productColumnWidth = `${70 / productsInfo.length}%`;
+  const firstColumnWidth = "200px";
+  const productColumnWidth = "200px";
 
   const handleToggleSelect = (event, name) => {
     const selectedIndex = selectedCharacteristics.indexOf(name);
@@ -429,12 +480,11 @@ function ProductTableContent() {
 
   return (
     <>
-      {(isLoading && !productsInfo) ?? <div>Loading...</div>
+      {(isLoading && !sProductsInfo) ?? <div>Loading...</div>
       }
       <Box 
         component="nav"
         sx={{
-          width: '100%',
           height: '76px',
           position: 'relative',
           boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
@@ -450,19 +500,19 @@ function ProductTableContent() {
       <Box sx={{ padding: 2 }}>
         <TableContainer component={Paper}>
           <Table
-            sx={{ minWidth: 700, tableLayout: "fixed", width: "100%" }}
+            sx={{width: "100%", overflowX : 'auto'}}
             aria-label="comparison table"
           >
             <TableHeader
               firstColumnWidth={firstColumnWidth}
               productColumnWidth={productColumnWidth}
-              productsInfo={productsInfo}
+              productsInfo={sProductsInfo}
             />
             <tbody>
-              <ImagesRow productsInfo={productsInfo} />
-              <PriceRow productsInfo={productsInfo} />
-              <RatingRow productsInfo={productsInfo} />
-              <AvailabilityRow productsInfo={productsInfo} />
+              <ImagesRow productsInfo={sProductsInfo} />
+              <PriceRow productsInfo={sProductsInfo} />
+              <RatingRow productsInfo={sProductsInfo} />
+              <AvailabilityRow productsInfo={sProductsInfo} />
 
               <CharacteristicsHeader
                 characteristicsExpanded={characteristicsExpanded}
@@ -490,7 +540,7 @@ function ProductTableContent() {
                   <StyledTableCell component="th" scope="row">
                     <strong>Общие характеристики</strong>
                   </StyledTableCell>
-                  {productsInfo.map((product, index) => (
+                  {sProductsInfo.map((product, index) => (
                     <StyledTableCell key={index} align="center">
                       <em style={{ color: "#6b7280" }}>
                         Нет общих характеристик для сравнения
@@ -500,13 +550,16 @@ function ProductTableContent() {
                 </StyledTableRow>
               )}
 
-              <AdditionalInfoRows productsInfo={productsInfo} rankItems={rankItems} />
+              <AdditionalInfoRows productsInfo={sProductsInfo} rankItems={rankItems} />
             </tbody>
           </Table>
         </TableContainer>
       </Box>
-      <Box sx={{ padding: 2, height: '50%', width: '50%', margin: '0 auto' }}>
-        <Bar data={chartData} options={options} />
+      <Box sx={{ padding: 2, height: '50%', width: '50%', margin: '0 auto',display: "flex", justifyContent : 'center' }}>
+        <Button variant="contained" onClick={() => onReload()}>Пересравнить</Button>
+      </Box>
+      <Box sx={{ padding: 2, height: '50%', width: '50%', margin: '0 auto'}}>
+        <Bar data={chartData} options={optionsZ}/>
         <Swiper
           spaceBetween={50}
           slidesPerView={1}
@@ -520,7 +573,6 @@ function ProductTableContent() {
           ))}
         </Swiper> 
       </Box>
-      <LoadingBackdrop open={isLoading} />
     </>
   );
 }

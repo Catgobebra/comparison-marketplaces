@@ -36,5 +36,7 @@ export const {
   useLazyGetProductBySkuQuery,
   useGetProductByUrlQuery,
   useLazyGetProductByUrlQuery,
-  useGetCompareProductsQuery
+  useGetCompareProductsQuery,
  } = api;
+
+ 

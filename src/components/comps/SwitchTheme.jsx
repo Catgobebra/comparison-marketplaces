@@ -60,59 +60,19 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
   },
 }));
 
-export function storageManager(params) {
-  const { key } = params;
-  
-  return {
-    get: (defaultValue) => {
-      try {
-        const value = localStorage.getItem(key);
-        if (value) {
-          return JSON.parse(value);
-        }
-      } catch (error) {
-        console.error('Error reading from localStorage:', error);
-      }
-      return defaultValue;
-    },
-    set: (value) => {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (error) {
-        console.error('Error writing to localStorage:', error);
-      }
-    },
-    subscribe: (handler) => {
-      const listener = (event) => {
-        if (event.key === key) {
-          try {
-            const newValue = event.newValue ? JSON.parse(event.newValue) : null;
-            handler(newValue);
-          } catch (error) {
-            console.error('Error parsing storage value:', error);
-          }
-        }
-      };
-      
-      window.addEventListener('storage', listener);
-      
-      return () => {
-        window.removeEventListener('storage', listener);
-      };
-    },
-  };
-}
-
 export default function SwitchTheme() {
   const { mode, setMode } = useColorScheme();
-  
-  const handleSwitch = (event) => {
-    const newMode = mode === 'light' ? 'dark' : 'light';
-    setMode(newMode);
+  if (!mode) {
+    return null;
+  }
+  const handleSwitch = () => {
+    if (mode !== 'dark') setMode('dark')
+    else setMode('light')
   };
-
+  console.log(mode)
   return (
-    <FormGroup>
+    <>
+     <FormGroup>
       <FormControlLabel
         control={
           <MaterialUISwitch 
@@ -123,5 +83,6 @@ export default function SwitchTheme() {
         }
       />
     </FormGroup>
+    </>
   );
 }

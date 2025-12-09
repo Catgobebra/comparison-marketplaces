@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useState} from "react";
-import { addProductToCategory, removeProductFromCategory } from "../redux-state/slices/filterProducts";
+import { addProductToCategory, removeProductFromCategory } from "../redux/slices/filterProducts";
 
 export function useCategories() {
   const dispatch = useDispatch();

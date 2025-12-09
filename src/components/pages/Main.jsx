@@ -17,7 +17,7 @@ import { useFilteredProducts } from "../../hooks/useFilteredProducts";
 import { useChrome } from "../../hooks/useChrome";
 import { useProductAddition } from "../../hooks/useProductAddition";
 
-import { useLazyGetProductBySkuQuery } from '../../redux-state/api';
+import { useLazyGetProductBySkuQuery } from '../../redux/api';
 
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
@@ -25,6 +25,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndProvider } from 'react-dnd';
 
 import * as styles from './styles'
+import { width } from "@mui/system";
 
 function MainContent() {
   const [getProduct, { data, isLoading,isFetching, error }] = useLazyGetProductBySkuQuery();

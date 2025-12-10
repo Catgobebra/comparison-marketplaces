@@ -1,0 +1,50 @@
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Colors,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Colors,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler
+);
+
+import {Radar } from 'react-chartjs-2';
+
+function RadialDiagramForTable(chartData,mode) {
+    const options = {
+    scales: {
+      r: {
+        suggestedMin: 0,
+        suggestedMax: 1,
+        grid: {
+          color: mode === 'light' ? "#263238" :"#eceff1"
+        },
+        angleLines: {
+          color: mode === 'light' ? "#263238" :"#eceff1"
+        }
+      }
+    }
+  }
+  return (<Radar data={chartData} options={options} />)
+}
+
+export default RadialDiagramForTable

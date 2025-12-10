@@ -25,54 +25,24 @@ import {setProduct} from "../../redux/slices/compareProducts"
 
 import SwitchTheme from "../comps/SwitchTheme";
 
-import { Bar } from 'react-chartjs-2';
-import { Radar } from 'react-chartjs-2';
-
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/swiper.css'
 
 import {useColorScheme } from '@mui/material/styles';
-
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Colors 
-} from 'chart.js';
 
 import { getCostWeight } from "../../utils/tableLogic";
 import { StyledTableRow, StyledTableCell } from "../comps/styledComponents";
 import LoadingBackdrop from "../comps/LoadingBackdrop";
 import { useGetCompareProductsQuery } from '../../redux/api'
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Colors,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler
-);
-
 function ProductTableContent() {
   const products = useSelector((state) => state.products.products).filter(x => x.isSelected); 
   const newUnicProducts = products.map(x => [x.id,x.productItem.article]);
   const compareProducts = useSelector((state) => state.compareProducts.lastCompare)
+  const newcompareProducts = compareProducts.map(x => x.productItem)
   const newUnicCompareProducts = compareProducts.map(x => [x?.id,x.productItem?.article]);
   let newProducts = products.map(x => x.productItem);
+  console.log(compareProducts,newUnicCompareProducts)
     const shouldSkip = newProducts.length <= 1 || 
     JSON.stringify(newUnicCompareProducts) === JSON.stringify(newUnicProducts);
 
@@ -82,100 +52,28 @@ function ProductTableContent() {
   const { mode, setMode } = useColorScheme();
 
   React.useEffect(() => {
-    if (shouldSkip) {
-      setsProductsInfo(compareProducts.length > 0 ? compareProducts : products);
+    if (JSON.stringify(newUnicCompareProducts) === JSON.stringify(newUnicProducts)) {
+      const newCompareProduct = compareProducts.map(x => x.productItem);
+      setsProductsInfo(compareProducts.length > 0 ? newCompareProduct : products);
     } else if (productsInfo) {
       setsProductsInfo(productsInfo);
-      dispatch(setProduct({currentCompare: products}));
-    } else {
-      setsProductsInfo(products);
-    }
-  }, [products, compareProducts, productsInfo, shouldSkip, dispatch]);
-
-
-
-  //console.log(mode)
-
-  //const [contentLoaded, setContentLoaded] = React.useState(false);
-
-  /* React.useEffect(() => {
-    if (!isLoading && productsInfo) {
-      const timer = setTimeout(() => {
-        setContentLoaded(true);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, productsInfo]); */
+      dispatch(setProduct({currentCompare: products.map((x,index) => 
+        ({id : x.id, productItem: productsInfo[index],marketplaceName : x.marketplaceName,isSelected : x.isSelected}))}));
+      }
+    console.log('+',products,productsInfo)
+  }, [productsInfo, dispatch]);
 
   const onReload = () => {
     refetch()
   }
 
   //console.log(productsInfo)
-  const [sProductsInfo, setsProductsInfo] = React.useState([]);
+  const [sProductsInfo, setsProductsInfo] = React.useState([]); //!
   const [characteristicsExpanded, setCharacteristicsExpanded] = React.useState(true);
   const [orderedCharacteristics, setOrderedCharacteristics] = React.useState([]);
   const [selectedCharacteristics, setSelectedCharacteristics] = React.useState([]);
   const [rankItems, setRankItems] = React.useState([]);
   const isInitialMount = React.useRef(true);
-
-  const chartRadialData = [];
-  if (sProductsInfo && sProductsInfo.length > 0) {
-    for (let i = 0; i < sProductsInfo.length; i++) {
-      chartRadialData.push({
-        labels: orderedCharacteristics.slice(0, 5).map(x => x.name),
-        datasets: [
-          {
-            label: 'Значение',
-            data: orderedCharacteristics.slice(0, 5).map(x => x.isBestFlags[i]),
-            fill: true,
-            borderWidth: 1,
-          },
-        ],
-      });
-    }
-  }
-
-  const chartData = {
-    labels: sProductsInfo ? sProductsInfo.map(product => product.productName?.substring(0, 50) || 'Без названия') : [],
-    datasets: [
-      {
-        label: 'Цена',
-        fill: true,
-        data: sProductsInfo ? sProductsInfo.map(product => getPriceInfo(product).min) : []
-      }
-    ]
-  };
-
-  const optionsZ = {
-    scales: {
-      x: {
-        grid: {
-          color: mode === 'light' ? "#263238" :"#eceff1",
-        }
-      },
-      y: {
-        grid: {
-          color: mode === 'light' ? "#263238" :"#eceff1",
-        }
-      },
-      }
-    }
-
-  const options = {
-    scales: {
-      r: {
-        suggestedMin: 0,
-        suggestedMax: 1,
-        grid: {
-          color: mode === 'light' ? "#263238" :"#eceff1"
-        },
-        angleLines: {
-          color: mode === 'light' ? "#263238" :"#eceff1"
-        }
-      }
-    }
-  }
 
   React.useEffect(() => {
     if (!orderedCharacteristics || !sProductsInfo || sProductsInfo.length === 0)
@@ -559,8 +457,7 @@ function ProductTableContent() {
         <Button variant="contained" onClick={() => onReload()}>Пересравнить</Button>
       </Box>
       <Box sx={{ padding: 2, height: '50%', width: '50%', margin: '0 auto'}}>
-        <Bar data={chartData} options={optionsZ}/>
-        <Swiper
+        {/* <Swiper
           spaceBetween={50}
           slidesPerView={1}
           onSlideChange={() => console.log('slide change')}
@@ -571,7 +468,7 @@ function ProductTableContent() {
               <Radar data={x} options={options} />
             </SwiperSlide>
           ))}
-        </Swiper> 
+        </Swiper>  */}
       </Box>
     </>
   );

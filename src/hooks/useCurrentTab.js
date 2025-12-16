@@ -1,6 +1,6 @@
 /* global chrome */
 import { useState, useEffect } from "react";
-import { MarketplaceParser } from "../utils/parseMarketplace";
+import { MarketplaceParser } from "../Utils/parseMarketplace";
 
 export function useCurrentTab(products) {
   const [currentUrl, setCurrentUrl] = useState("");

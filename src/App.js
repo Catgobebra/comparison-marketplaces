@@ -2,8 +2,8 @@ import * as React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
-import Main from "./components/pages/Main";
-import ProductTable from "./components/pages/ProductTable";
+import Main from "./Components/Pages/Main/Main";
+import ProductTable from "./Components/Pages/ProductTable/ProductTable";
 
 const theme = createTheme({
   colorSchemes: {

@@ -1,5 +1,5 @@
 import { useDrag } from 'react-dnd';
-import { ItemTypes } from '../components/comps/ItemTypes';
+import { ItemTypes } from '../Constants/ItemTypes';
 
 export function useProductDrag(product) {
   const [{ isDragging }, drag] = useDrag(() => ({

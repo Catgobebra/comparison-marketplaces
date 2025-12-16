@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MarketplaceParser } from "../utils/parseMarketplace";
+import { MarketplaceParser } from "../Utils/parseMarketplace";
 import { useProducts } from "./useProducts";
 import { useSnackbar } from "./useSnackbar";
 
@@ -32,7 +32,8 @@ export function useProductAddition(getProduct) {
     }
 
     try {
-      const productData = await getProduct(sku,true).unwrap();
+
+      const productData = await getProduct(url,true).unwrap();
       addProduct({product: productData,
       marketplace: MarketplaceParser.getMarketplace(url)});
       setSnackbarState({

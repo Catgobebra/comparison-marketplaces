@@ -15,13 +15,16 @@ import { useDrop } from 'react-dnd';
 import { ItemTypes } from '../../../Constants/ItemTypes';
 import { addCategory, removeCategory } from "../../../redux/slices/filterProducts";
 
+import * as styles from './styles'
+
 const DroppableCategory = ({ 
   categoryId,
   categoryItem, 
   currentCategory, 
   onCategoryChange, 
   onProductDrop,
-  onRemoveCategory 
+  onRemoveCategory,
+  resetToAll
 }) => {
   const [{ isOver }, drop] = useDrop(() => ({
     accept: ItemTypes.PRODUCT,
@@ -80,6 +83,8 @@ const DroppableCategory = ({
             onClick={(e) => {
               e.stopPropagation();
               dispatch(onRemoveCategory({categoryId : categoryId}));
+              if (isSelected)
+                resetToAll()
             }}
             aria-label={`Удалить категорию ${categoryItem.name}`}
           >
@@ -91,7 +96,7 @@ const DroppableCategory = ({
   );
 };
 
-export default function CategoriesList({ currentCategory, onCategoryChange, onProductDrop }) {
+export default function CategoriesList({ currentCategory, onCategoryChange, onProductDrop, resetToAll }) {
   const dispatch = useDispatch()  
   const categories = useSelector((s) => s.filterProducts?.filterProducts)
   const [inputValue, setInputValue] = useState('');
@@ -124,6 +129,7 @@ export default function CategoriesList({ currentCategory, onCategoryChange, onPr
             onCategoryChange={onCategoryChange}
             onProductDrop={onProductDrop}
             onRemoveCategory={removeCategory}
+            resetToAll={resetToAll}
           />
         ))}
         

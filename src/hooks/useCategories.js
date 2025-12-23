@@ -10,7 +10,6 @@ export function useCategories() {
 
   const addToCategory = (productId, categoryId) => 
   {
-    console.log(productId, categoryId)
     dispatch(addProductToCategory({categoryId : categoryId, productId: productId }));
   }
 

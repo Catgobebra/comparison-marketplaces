@@ -40,10 +40,8 @@ function MainContent() {
     handleAddFromInput, 
     handleAddFromTab 
   } = useProductAddition(getProduct,setSnackbarState);
-  
 
   const filteredProducts = useFilteredProducts(products, categories, currentCategory.id);
-
 
   const handleProductDrop = (productId, categoryId) => {
     addToCategory(productId, categoryId);

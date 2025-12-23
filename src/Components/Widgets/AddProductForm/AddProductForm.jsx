@@ -86,7 +86,7 @@ export default function AddProductForm({
           onClick={onAddFromTab}
           color="primary"
           aria-label="add"
-          /* className={styles.fab} */
+          sx={{height: '40px', width: '50px', margin: '0 15px'}}
         >
           <AddIcon />
         </Fab>

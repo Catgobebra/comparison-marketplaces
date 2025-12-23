@@ -33,17 +33,17 @@ function MainContent() {
   const { categories, currentCategory, setCurrentCategory, addToCategory } = useCategories();
   const { currentUrl, showFab } = useCurrentTab(products);
   const { openComparePage } = useChrome();
+
   const { 
     currentLink, 
     handleInputChange, 
     handleAddFromInput, 
     handleAddFromTab 
-  } = useProductAddition(getProduct);
+  } = useProductAddition(getProduct,setSnackbarState);
   
+
   const filteredProducts = useFilteredProducts(products, categories, currentCategory.id);
- 
-  console.log(products)
-  console.log(categories)
+
 
   const handleProductDrop = (productId, categoryId) => {
     addToCategory(productId, categoryId);

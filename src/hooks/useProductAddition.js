@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { MarketplaceParser } from "../Utils/parseMarketplace";
 import { useProducts } from "./useProducts";
-import { useSnackbar } from "./useSnackbar";
 
-export function useProductAddition(getProduct) {
+export function useProductAddition(getProduct, setSnackbarState) {
   const [currentLink, setCurrentLink] = useState("");
-  const {addProduct, products } = useProducts();
-  const { setSnackbarState } = useSnackbar();
+  const { addProduct, products } = useProducts();
 
   const handleInputChange = (e) => setCurrentLink(e.target.value);
 
   const addProductByUrl = async (url) => {
     if (!MarketplaceParser.isValidUrl(url)) {
       setSnackbarState({
-        open: true,
+        open: true,   
         severity: "error",
         message: "Неверная ссылка на товар",
       });
@@ -24,7 +22,7 @@ export function useProductAddition(getProduct) {
     
     if (products.some(p => p.productItem.article === sku)) {
       setSnackbarState({
-        open: true,
+        open: true,   
         severity: "warning",
         message: "Этот товар уже добавлен",
       });
@@ -32,18 +30,19 @@ export function useProductAddition(getProduct) {
     }
 
     try {
-
-      const productData = await getProduct(url,true).unwrap();
-      addProduct({product: productData,
-      marketplace: MarketplaceParser.getMarketplace(url)});
+      const productData = await getProduct(url, true).unwrap();
+      addProduct({
+        product: productData,
+        marketplace: MarketplaceParser.getMarketplace(url)
+      });
       setSnackbarState({
-        open: true,
+        open: true,   
         severity: "success",
         message: "Товар успешно добавлен",
       });
     } catch (error) {
       setSnackbarState({
-        open: true,
+        open: true,   
         severity: "error",
         message: "Ошибка при добавлении товара",
       });

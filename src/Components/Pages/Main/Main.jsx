@@ -30,7 +30,7 @@ function MainContent() {
   const [getProduct, { data, isLoading,isFetching, error }] = useLazyGetProductByUrlQuery();
   const {snackbar, setSnackbarState } = useSnackbar();
   const {products} = useProducts(data);
-  const { categories, currentCategory, setCurrentCategory, addToCategory } = useCategories();
+  const { categories, currentCategory, setCurrentCategory, addToCategory,resetToAll } = useCategories();
   const { currentUrl, showFab } = useCurrentTab(products);
   const { openComparePage } = useChrome();
 
@@ -76,6 +76,7 @@ function MainContent() {
               currentCategory={currentCategory}
               onCategoryChange={setCurrentCategory} 
               onProductDrop={handleProductDrop}
+              resetToAll={resetToAll}
             />
           </Box>
           

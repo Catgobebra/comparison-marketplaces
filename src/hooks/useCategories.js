@@ -13,6 +13,11 @@ export function useCategories() {
     dispatch(addProductToCategory({categoryId : categoryId, productId: productId }));
   }
 
+  const resetToAll = () => 
+  {
+    setCurrentCategory(allCategory)
+  }
+
   const removeFromCategory = (productId, categoryName) => 
     dispatch(removeProductFromCategory({ productId, categoryName }));
 
@@ -21,6 +26,7 @@ export function useCategories() {
     currentCategory,
     setCurrentCategory,
     addToCategory,
-    removeFromCategory
+    removeFromCategory,
+    resetToAll
   };
 }

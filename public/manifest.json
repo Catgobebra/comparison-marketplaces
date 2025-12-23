@@ -1,7 +1,7 @@
 {
   "short_name": "React App",
-  "name": "cute futanari",
-  "version": "1.0.0.0",
+  "name": "Web market compare",
+  "version": "2.0.0.0",
   "manifest_version": 3,
   "icons": {
     "192": "logo192.png",

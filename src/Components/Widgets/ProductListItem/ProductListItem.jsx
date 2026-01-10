@@ -15,6 +15,7 @@ import * as styles from "./styles";
 
 import ReliabilityChip from "../../UI/ReliabilityChip/ReliabilityChip";
 
+
 import { useProductData } from "../../../Hooks/useProductData";
 import { useProductDrag } from "../../../Hooks/useProductDrag";
 import { useProductSelection } from "../../../Hooks/useProductSelection";
@@ -35,14 +36,13 @@ export default function ProductListItem({
     linkProduct,
   } = useProductData(product);
 
-  console.log(product);
   const colorsZ = {
     ozon: "#0040b3",
     wb: "#5f02a9",
     "ya-market": "#978002",
   };
-  const ProductColor = colorsZ[product.marketplaceName]; //!
-
+  
+  const ProductColor = colorsZ[product.marketplaceName];
   const { isSelected, toggleSelection } = useProductSelection(productId);
   const { isDragging, drag } = useProductDrag(product);
   const {

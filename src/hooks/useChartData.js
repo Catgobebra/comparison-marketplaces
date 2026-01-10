@@ -18,7 +18,7 @@ export function useChartData(productsInfo,orderedCharacteristics) {
 
   const chartData = {
     labels: productsInfo?.map(
-      (product) => product?.productName?.substring(0, 50) || "Без названия"
+      (product) => `${product?.productName?.substring(0, 30)}...` || "Без названия"
     ) || [],
     datasets: [
       {

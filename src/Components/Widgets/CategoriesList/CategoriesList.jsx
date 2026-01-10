@@ -63,9 +63,18 @@ const DroppableCategory = ({
           primary={categoryItem.name} 
           primaryTypographyProps={{
             fontSize: "0.875rem",
-            noWrap: true,
             title: categoryItem.name,
-            fontWeight: isSelected ? 'bold' : 'normal'
+            fontWeight: isSelected ? 'bold' : 'normal',
+            sx: {
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'normal',
+            wordBreak: 'break-word',
+            hyphens: 'auto'
+            }
           }}
         />
         
@@ -118,7 +127,7 @@ export default function CategoriesList({ currentCategory, onCategoryChange, onPr
   };
 
   return (
-    <Box sx={{ width: "88px", height: "100%", overflow: "auto" }}>
+    <Box sx={{ width: "100%", height: "100%", overflow: "auto" }}>
       <List dense sx={{ width: "100%" }}>
         {categories.map((categoryObject) => (
           <DroppableCategory
@@ -145,10 +154,10 @@ export default function CategoriesList({ currentCategory, onCategoryChange, onPr
               onKeyPress={handleInputKeyPress}
               inputProps={{ maxLength: 20 }}
               sx={{
-                "& .MuiInputBase-root": { height: 32 },
+                "& .MuiInputBase-root": { height: 'auto' },
                 "& .MuiOutlinedInput-input": { 
                   fontSize: "0.875rem",
-                  padding: "6px 8px"
+                  padding: "6px 8px",
                 }
               }}
             />

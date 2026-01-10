@@ -14,8 +14,7 @@
     "cookies",
     "tabs",
     "activeTab",
-    "storage",
-    "http://localhost:5000/*"
+    "storage"
   ],
   "host_permissions": [
     "https://www.ozon.ru/*",

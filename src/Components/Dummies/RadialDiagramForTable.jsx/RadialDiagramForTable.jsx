@@ -33,6 +33,17 @@ function RadialDiagramForTable({chartData,mode}) {
     const options = {
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          const label = context.chart.data.labels[context.dataIndex]
+          const isBest = context.parsed.r
+          return `${label} - ${isBest ? 'лучший' : "не лучший"}`;
+        }
+      }
+      }
+    },
     scales: {
       r: {
         suggestedMin: 0,

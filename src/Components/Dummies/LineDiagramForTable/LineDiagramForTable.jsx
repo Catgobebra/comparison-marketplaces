@@ -30,6 +30,16 @@ ChartJS.register(
 
 function LineDiagramForTable({chartData, mode}) {
    const optionsDiagram = {
+    plugins: {
+    tooltip: {
+      callbacks: {
+        label: function(context) {
+          const price = context.parsed.y;
+          return `Цена: ${price} ₽`;
+        }
+      }
+    }
+  },
     scales: {
       x: {
         grid: {
@@ -40,6 +50,11 @@ function LineDiagramForTable({chartData, mode}) {
         grid: {
           color: mode === "light" ? "#263238" : "#eceff1",
         },
+        ticks: {
+        callback: function(value) {
+          return value + ' ₽';
+        }
+       } 
       },
     },
   };

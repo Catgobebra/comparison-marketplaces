@@ -24,7 +24,7 @@ export const categoryContainer = {
     boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
     position : 'relative',
     backgroundColor: 'background.paper',
-    width: '15%'
+    width: '220px'
 }
 
 export const listProductContainer = {

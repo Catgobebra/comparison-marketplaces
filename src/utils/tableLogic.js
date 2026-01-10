@@ -36,7 +36,8 @@ export const ratingConfidenceInterval = (
   num_reviews,
   confidence = 0.95
 ) => {
-  if (num_reviews <= 1) return [0, 5];
+  if (num_reviews === 0) return [0, 0];
+  if (num_reviews === 1) return [0, 5];
   const assumed_std = 1.2;
   const standard_error = assumed_std / Math.sqrt(num_reviews);
   const z_values = { 0.9: 1.645, 0.95: 1.96, 0.99: 2.576 };
@@ -49,6 +50,7 @@ export const ratingConfidenceInterval = (
 
 export const getStatusRank = (low, high) => {
   const width = high - low;
+  if (width === 0) return "не определена";
   if (width < 0.5) return "высокая";
   if (width < 1.0) return "средняя";
   return "низкая";

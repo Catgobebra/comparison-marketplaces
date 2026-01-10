@@ -14,6 +14,8 @@ export default function ReliabilityChip({ averageRating, reviewsCount,sx }) {
     ? "success"
     : reliability === "средняя"
     ? "warning"
+    : reliability === "не определена"
+    ? "info"
     : "error";
   return (
     <Chip

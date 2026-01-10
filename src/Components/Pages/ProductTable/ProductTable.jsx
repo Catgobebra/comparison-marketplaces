@@ -35,6 +35,12 @@ import { useCharacteristics } from "../../../Hooks/useCharacteristics";
 import { useComparisonLogic } from "../../../Hooks/useComparisonLogic";
 import { useChartData } from "../../../Hooks/useChartData";
 
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+import { Navigation,Pagination } from 'swiper/modules';
+
+
+
 function ProductTableContent() {
   const { sProductsInfo, isLoading, error, onReload, isFetching, newProducts,data } =
     useProductComparison();
@@ -210,10 +216,13 @@ function ProductTableContent() {
       <Box sx={{ padding: 2, height: "50%", width: "50%", margin: "0 auto" }}>
        <LineDiagramForTable chartData={chartData} mode={mode} />
        <Swiper
+          modules={[Navigation, Pagination]}
           spaceBetween={50}
           slidesPerView={1}
           observer={true}
           observeParents={true}
+          navigation
+          pagination={{clickable:true}}
           observeSlideChildren={true}
           style={{width: '100%',
           height: '60vh'}}

@@ -209,14 +209,19 @@ function ProductTableContent() {
       </Box>
       <Box sx={{ padding: 2, height: "50%", width: "50%", margin: "0 auto" }}>
        <LineDiagramForTable chartData={chartData} mode={mode} />
-         <Swiper
+       <Swiper
           spaceBetween={50}
           slidesPerView={1}
+          observer={true}
+          observeParents={true}
+          observeSlideChildren={true}
+          style={{width: '100%',
+          height: '60vh'}}
           onSlideChange={() => console.log("slide change")}
           onSwiper={(swiper) => console.log(swiper)}
         >
           {chartRadialData.map((x, index) => (
-            <SwiperSlide key={index}>
+            <SwiperSlide key={index} style={{ height: '100%' }}>
               <RadialDiagramForTable chartData={x} mode={mode} />
             </SwiperSlide>
           ))}

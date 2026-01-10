@@ -31,6 +31,8 @@ ChartJS.register(
 
 function RadialDiagramForTable({chartData,mode}) {
     const options = {
+    responsive: true,
+    maintainAspectRatio: false,
     scales: {
       r: {
         suggestedMin: 0,

@@ -4,14 +4,16 @@ import Grid from '@mui/material/Grid';
 
 export default function ProductList({ products,currentCategory }) {
   return (
-    <Grid container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }} sx={{ width: "100%"}}>
+    <Grid container spacing={2}>
       {products.map((p, i) => (
-        <ProductListItem 
-          key={p.id} 
-          productId={p.id} 
-          product={p}
-          currentCategory={currentCategory}
-        />
+        <Grid item key={p.id} xs={12} sm={6}>
+          <ProductListItem 
+            key={p.id} 
+            productId={p.id} 
+            product={p}
+            currentCategory={currentCategory}
+          />
+        </Grid>
       ))}
     </Grid>
   );

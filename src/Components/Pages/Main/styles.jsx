@@ -36,7 +36,6 @@ export const listProductContainer = {
 export const mainContentContainer = {
     padding: "10px",
     height: "400px",
-    width: "85%",
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',

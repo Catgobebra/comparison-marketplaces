@@ -29,14 +29,14 @@ export const filterProductsReducer = createSlice({
         0
       );
       const newId = maxId + 1;
-      if (!state.filterProducts.some((x) => x.name === trimmedName)) {
-        state.filterProducts.push({
-          id: newId,
-          name: trimmedName,
-          productList: [],
-          isSystem: false,
-        });
-      }
+
+      state.filterProducts.push({
+        id: newId,
+        name: trimmedName,
+        productList: [],
+        isSystem: false,
+      });
+      
     },
 
     addProductToCategory: (state, action) => {

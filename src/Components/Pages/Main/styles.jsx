@@ -24,7 +24,7 @@ export const categoryContainer = {
     boxShadow: '0 1px 2px 0 rgba(0,0,0,0.1)',
     position : 'relative',
     backgroundColor: 'background.paper',
-    width: '220px'
+    width: '12%'
 }
 
 export const listProductContainer = {
@@ -34,13 +34,14 @@ export const listProductContainer = {
 }
 
 export const mainContentContainer = {
-    padding: "10px",
+    padding: "8px",
     height: "400px",
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
     flexDirection: 'column',
-    gap: '20px',
+    width: '88%',
+    gap: '15px',
     backgroundColor: 'background.default'
 }
 

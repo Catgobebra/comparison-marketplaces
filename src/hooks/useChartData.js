@@ -1,13 +1,12 @@
 import { getPriceInfo } from "../Utils/tableLogic";
 
 export function useChartData(productsInfo,orderedCharacteristics) {
-  console.log(productsInfo)
   const chartRadialData = productsInfo?.map((element, index) => {
     return {
       labels: orderedCharacteristics?.slice(0, 5)?.map((x) => x?.name) || [],
       datasets: [
         {
-          label: "Значение",
+          label: `${element?.productName?.substring(0, 30)}...` || "Без названия",
           data: orderedCharacteristics?.slice(0, 5)?.map((x) => x?.isBestFlags?.[index] || 0) || [],
           fill: true,
           borderWidth: 1,
